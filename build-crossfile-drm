@@ -1,0 +1,14 @@
+[binaries]
+ndk = ''
+ar = ndk + 'ar'
+c = ['ccache', ndk + 'aarch64-linux-gnu-gcc', '-O3', '-DVK_USE_PLATFORM_ANDROID_KHR', '-fPIC']
+cpp = ['ccache', ndk + 'aarch64-linux-gnu-cpp', '-O3', '-DVK_USE_PLATFORM_ANDROID_KHR', '-fPIC', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++']
+c_ld = 'bfd'
+cpp_ld = 'bfd'
+strip = ndk + '/aarch64-linux-gnu-strip'
+pkgconfig = ['env', 'PKG_CONFIG_LIBDIR=.', '/usr/bin/pkg-config']
+[host_machine]
+system = 'android'
+cpu_family = 'arm'
+cpu = 'armv8'
+endian = 'little'
