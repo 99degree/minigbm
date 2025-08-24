@@ -154,5 +154,6 @@ Dont forget to add mapper.minigbm.xml to vintf/
 ## Reference
 [1]https://android.googlesource.com/platform/external/minigbm/+/refs/heads/main \
 [2]https://android.googlesource.com/platform/prebuilts/vndk/v34/ \
-[3]https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
-[4]https://github.com/99degree/android-mesa-build/actions/
+[3]https://dl.google.com/android/repository/android-ndk-r27d-linux.zip \
+[4]https://github.com/99degree/android-mesa-build/actions/ \
+
