@@ -31,20 +31,20 @@ Before compile minigbm, libdrm is needed as libdrm.a this case.
 > - git clone https://gitlab.freedesktop.org/mesa/drm.git --depth=1 
 > - cd drm 
 > - wget https://github.com/99degree/android-mesa-build/raw/refs/heads/master/android-drm-aarch64 
-> - meson setup "build-android" \
-            --prefix=/tmp/drm-static \
-            --cross-file "android-drm-aarch64" \
-            -Ddefault_library=static \
-            -Dintel=disabled \
-            -Dradeon=disabled \
-            -Damdgpu=disabled \
-            -Dnouveau=disabled \
-            -Dvmwgfx=disabled \
-            -Dfreedreno=enabled \
-            -Dvc4=disabled \
-            -Detnaviv=disabled \
+> - meson setup "build-android" \ \
+            --prefix=/tmp/drm-static \ \
+            --cross-file "android-drm-aarch64" \ \
+            -Ddefault_library=static \ \
+            -Dintel=disabled \ \
+            -Dradeon=disabled \ \
+            -Damdgpu=disabled \ \
+            -Dnouveau=disabled \ \
+            -Dvmwgfx=disabled \ \
+            -Dfreedreno=enabled \ \
+            -Dvc4=disabled \ \
+            -Detnaviv=disabled \ \
             -Dfreedreno-kgsl=true
-          ninja -C "build-android" install
+>  - ninja -C "build-android" install
 
 This is for compiling exclusively *MSM/QCOM* platform. Other platform change above accordingly.
 
@@ -66,12 +66,6 @@ Mine is looked like below since I checked out vndk v30 to v34
 > ls /usr/android-ndk-r27d/prebuilt/vndk/  \
 > v30  v31  v32  v33  v34
 
-_OR_ if your NDK is located at /usr/share/android-ndk-r27d/ then you can add meson option as below:
->    meson -Dndk_include=/usr/share/android-ndk-r27d/ ...
-
-_AND_ vndk has to be in this arrangement:
-> SOME_FOLDER/android-ndk-r27d/prebuilt/vndk/v34
-
 To start compile, type below or just directly checkout my tree:
 >  git clone -b main --depth 6 https://android.googlesource.com/platform/external/minigbm \
 >  cd minigbm \
@@ -83,6 +77,18 @@ To start compile, type below or just directly checkout my tree:
 Make change to cross build file android-aarch64, those ndk path etc are needed to change.
 >  meson setup build-android --prefix=/tmp/minigbm -Dextra_include=/tmp/drm-static/ --cross-file  android-aarch64 \
 >  ninja -C build-android install
+
+_OR_ if your NDK is located at /usr/share/android-ndk-r27d/ then you can add meson option -Dndk_include as below:
+> meson setup build-android
+>    -Dndk_include=/usr/share/android-ndk-r27d/ \ \
+>    --prefix=/tmp/minigbm \ \
+>    -Dextra_include=/tmp/drm-static/ \ \
+>    --cross-file  android-aarch64 \ \
+> ninja -C build-android install
+
+_AND_ vndk has to be in this arrangement:
+> SOME_FOLDER/android-ndk-r27d/prebuilt/vndk/v34
+
 
 So all generated library is located at /tmp/minigbm/lib/
 
