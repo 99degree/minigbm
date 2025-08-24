@@ -1,3 +1,6 @@
+#
+# Copyright George Chan gchan9527@gmail.com
+#
 project('minigbm', ['c', 'cpp'], version: '1.0', default_options: ['cpp_std=c++20'])
 
 cpu_family = host_machine.cpu_family()
