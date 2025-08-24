@@ -126,6 +126,10 @@ Some tools are needed:
 >    libxrandr-dev libxxf86vm-dev libxcb-*-dev libx11-xcb-dev libxfixes-dev libdrm-dev libx11-dev
 >    glslang-tools libclc-18-dev libclc-18 gcc-13-aarch64-linux-gnu
 
+Note: 
+- ndk r27c is not android 14+ compatible, so ndk r27d LTS is prefered.
+- vndk 34 is last one support out-of-tree build and first one to introduce Mapper5 stable-c api
+
 ## Install
 From Copilot, below is needed once to use it:
 > setprop debug.mapper.impl minigbm
@@ -150,5 +154,5 @@ Dont forget to add mapper.minigbm.xml to vintf/
 ## Reference
 [1]https://android.googlesource.com/platform/external/minigbm/+/refs/heads/main \
 [2]https://android.googlesource.com/platform/prebuilts/vndk/v34/ \
-[3]https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+[3]https://dl.google.com/android/repository/android-ndk-r27d-linux.zip
 [4]https://github.com/99degree/android-mesa-build/actions/
