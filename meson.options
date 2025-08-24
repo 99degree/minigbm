@@ -1,5 +1,12 @@
 # meson.options
 option(
+  'ndk_include',
+  type : 'string',
+  value : '',
+  description : 'Path prefix for extra include directories (e.g. Android headers)'
+)
+
+option(
   'extra_include',
   type : 'string',
   value : '',

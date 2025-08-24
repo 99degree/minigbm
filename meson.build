@@ -8,113 +8,62 @@ cpu_family = host_machine.cpu_family()
 # Include directories
 inc = include_directories('.')
 extra_include = get_option('extra_include')
-inc_extra_v33 = include_directories(
-#this is not available
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/liblog/',
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libhardware/',
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libbase/',
-# below are available for v33 sdk
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsystem/',
-# provide hardware/gralloc.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/hardware/libhardware/include/',
-# provide system/graphics-base-v1.0.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsystem/include/',
-# provide sync/sync.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsync/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libvndksupport/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsysutils/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V3-ndk-source/gen/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libcutils/include',
-# provide log/log.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/logging/liblog/include_vndk/',
-# missing BufferDescriptorInfo.h
-# no go...
-#
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/liblog/',
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libhardware/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/libbase/include/',
-# below are available for v33 sdk
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsystem/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/hardware/libhardware/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsystem/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsync/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libvndksupport/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libsysutils/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V3-ndk-source/gen/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libcutils/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/logging/liblog/include_vndk/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/aidl/android.hardware.graphics.allocator-V1-ndk-source/gen/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.2/android.hardware.graphics.common@1.2_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.1/android.hardware.graphics.common@1.1_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.0/android.hardware.graphics.common@1.0_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/libhidl/base/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/core/libutils/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/system/libfmq/base/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/hardware/interfaces/graphics/mapper/4.0/android.hardware.graphics.mapper@4.0_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/system/libhidl/transport/base/1.0/android.hidl.base@1.0_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/generated-headers/system/libhidl/transport/manager/1.0/android.hidl.manager@1.0_genc++_headers/gen/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/frameworks/native/libs/gralloc/types/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/frameworks/native/libs/nativewindow/include/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v33/arm64/include/frameworks/native/libs/nativebase/include/',
-# 2-last thing is ndk
-  '/usr/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/',
-# last is our shim
-  join_paths('.', 'include/'),
-  join_paths(extra_include, 'include'),
-  join_paths(extra_include, 'include/libdrm'),
-  join_paths('.', 'include/stable-c-v33/include'),
-  join_paths('.', 'include/stable-c-v33/implutils/include/'),   
-)
+ndk_include = get_option('ndk_include')
+
+# get-around ndk directory not as below but empty
+if get_option('ndk_include') == ''
+  ndk_include = '/usr/android-ndk-r27d/'
+endif
 
 inc_extra_v34 = include_directories(
 #this is yet to verify
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/liblog/',
-#  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libhardware/',
+#  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/liblog/',
+#  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libhardware/',
 #
 # provide android-base/unique_fd.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/libbase/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libbase/include/'),
 # below are available for v34 sdk
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libsystem/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/'),
 # provide hardware/gralloc.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/hardware/libhardware/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/hardware/libhardware/include/'),
 # provide system/graphics-base-v1.0.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libsystem/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/include/'),
 # provide sync/sync.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libsync/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libvndksupport/include',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libsysutils/',
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/', 
- '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libcutils/include',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsync/include'),
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libvndksupport/include'),
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsysutils/'),
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'), 
+   join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libcutils/include'),
 # provide log/log.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/logging/liblog/include_vndk/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/logging/liblog/include_vndk/'),
 # missing BufferDescriptorInfo.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/aidl/android.hardware.graphics.allocator-V2-ndk-source/gen/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/aidl/android.hardware.graphics.allocator-V2-ndk-source/gen/include/'),
 # 1.2/Type.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.2/android.hardware.graphics.common@1.2_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.2/android.hardware.graphics.common@1.2_genc++_headers/gen/'),
 # 1.1/Type.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.1/android.hardware.graphics.common@1.1_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.1/android.hardware.graphics.common@1.1_genc++_headers/gen/'),
 # 1.0/Type.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.0/android.hardware.graphics.common@1.0_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.0/android.hardware.graphics.common@1.0_genc++_headers/gen/'),
 # Hidlsupport.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/libhidl/base/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libhidl/base/include/'),
 # utils/Error.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/core/libutils/include',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libutils/include'),
 # fmq/MQDescriptorBase.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/system/libfmq/base/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libfmq/base/'),
 # 4.0/IMapper.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/mapper/4.0/android.hardware.graphics.mapper@4.0_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/mapper/4.0/android.hardware.graphics.mapper@4.0_genc++_headers/gen/'),
 # 1.0/IBase.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/base/1.0/android.hidl.base@1.0_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/base/1.0/android.hidl.base@1.0_genc++_headers/gen/'),
 # 1.0/IServiceNotification.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/manager/1.0/android.hidl.manager@1.0_genc++_headers/gen/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/manager/1.0/android.hidl.manager@1.0_genc++_headers/gen/'),
 # gralloctypes/Gralloc4.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/frameworks/native/libs/gralloc/types/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/gralloc/types/include/'),
 # system/window.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativewindow/include/',
-#nativebase.h
-  '/usr/android-ndk-r27d/prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativebase/include/',
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativewindow/include/'),
+# nativebase.h
+  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativebase/include/'),
 # 2-last thing is ndk
-  '/usr/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/',
+  join_paths(ndk_include, 'toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/'),
 # last is our shim
   join_paths('.', 'include/'),
   join_paths(extra_include, 'include'),
