@@ -6,6 +6,11 @@ out-of-tree build by meson. For further info about Mesa3D Vulkan driver please r
 ## Caution
 This is for only compile test. Not tested with actual device, dont use for daily drive.
 
+## Download
+A copy of minigbm is compiled and uploaded by github action. Grab it from below:
+
+https://github.com/99degree/android-mesa-build/actions
+
 ## Intro
 There are some changes added without modify any of original code.
 Inorder to make the library works with Android 14+ with Mapper V5 stable-c api,
