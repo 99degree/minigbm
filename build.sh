@@ -7,7 +7,7 @@
 	--prefix=/tmp/mesa \
 	--cross-file "../build-crossfile" \
 	-Ddefault_library=static \
-	-Dndk_include=/usr/android-ndk-r27d/ \
+	-Dndk_root=/usr/android-ndk-r27d/ \
 	--force-fallback-for=libdrm \
 	-Dlibdrm:freedreno-kgsl=true \
 	-Dlibdrm:intel=auto \
