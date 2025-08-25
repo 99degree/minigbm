@@ -108,14 +108,15 @@ meson_cflags   = ['-DDRV_MESON']
 msm_cflags     = ['-DDRV_MSM', '-DQCOM_DISABLE_COMPRESSED_NV12', '-DHAS_DMABUF_SYSTEM_HEAP']
 arcvm_cflags   = ['-DVIRTIO_GPU_NEXT']
 
-common_link_args = ['-Wl']
+common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
 
 # Try to find system libdrm first, fall back to subproject if missing
 libdrm_dep = dependency(
   'libdrm',
   version: '>=2.4.100',
   required: false,
-  fallback: ['libdrm', 'libdrm_dep']
+  fallback: ['libdrm', 'libdrm_dep'],
+  static: true
 )
 
 common_deps = [
