@@ -8,6 +8,15 @@ project('minigbm', ['c', 'cpp'],
   default_options: ['c_std=c99', 'cpp_std=c++20', 'warning_level=2']
 )
 
+ndk_root = get_option('ndk_root')
+if ndk_root == ''
+  ndk_root = meson.get_external_property('ndk_root', '')
+endif
+
+if ndk_root == ''
+  error('You must set ndk_root either in the cross file or with -Dndk_root=...')
+endif
+
 # Define all available drivers in one place
 _all_drivers = [
   'amdgpu', 'i915', 'xe', 'meson', 'msm', 'vc4',
@@ -24,69 +33,57 @@ cpu_family = host_machine.cpu_family()
 
 # === Include directories ===
 inc = include_directories('.')
-#extra_include = get_option('extra_include')
-ndk_include = get_option('ndk_include')
-
-# Workaround: if ndk_include not provided, use default path
-if get_option('ndk_include') == ''
-  ndk_include = '/usr/android-ndk-r27d/'
-endif
 
 # Extended include paths for Android VNDK v34
 # Each path below has a comment describing what headers it provides
 inc_extra_v34 = include_directories(
   # android-base/unique_fd.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libbase/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libbase/include/'),
   # system/core/libsystem/
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/'),
   # hardware/gralloc.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/hardware/libhardware/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/hardware/libhardware/include/'),
   # system/graphics-base-v1.0.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libsystem/include/'),
   # sync/sync.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsync/include'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libsync/include'),
   # libvndksupport
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libvndksupport/include'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libvndksupport/include'),
   # libsysutils
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libsysutils/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libsysutils/'),
   # graphics.common-V4 AIDL headers
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'),
   # libcutils
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libcutils/include'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libcutils/include'),
   # log/log.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/logging/liblog/include_vndk/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/logging/liblog/include_vndk/'),
   # BufferDescriptorInfo.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/aidl/android.hardware.graphics.allocator-V2-ndk-source/gen/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/aidl/android.hardware.graphics.allocator-V2-ndk-source/gen/include/'),
   # graphics.common@1.2
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.2/android.hardware.graphics.common@1.2_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.2/android.hardware.graphics.common@1.2_genc++_headers/gen/'),
   # graphics.common@1.1
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.1/android.hardware.graphics.common@1.1_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.1/android.hardware.graphics.common@1.1_genc++_headers/gen/'),
   # graphics.common@1.0
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.0/android.hardware.graphics.common@1.0_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/1.0/android.hardware.graphics.common@1.0_genc++_headers/gen/'),
   # Hidlsupport.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libhidl/base/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhidl/base/include/'),
   # utils/Error.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/core/libutils/include'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/core/libutils/include'),
   # fmq/MQDescriptorBase.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/system/libfmq/base/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libfmq/base/'),
   # IMapper 4.0
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/mapper/4.0/android.hardware.graphics.mapper@4.0_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/mapper/4.0/android.hardware.graphics.mapper@4.0_genc++_headers/gen/'),
   # IBase 1.0
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/base/1.0/android.hidl.base@1.0_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/base/1.0/android.hidl.base@1.0_genc++_headers/gen/'),
   # IServiceNotification 1.0
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/manager/1.0/android.hidl.manager@1.0_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/system/libhidl/transport/manager/1.0/android.hidl.manager@1.0_genc++_headers/gen/'),
   # gralloctypes/Gralloc4.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/gralloc/types/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/gralloc/types/include/'),
   # system/window.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativewindow/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativewindow/include/'),
   # nativebase.h
-  join_paths(ndk_include, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativebase/include/'),
-  # sysroot includes
-#  join_paths(ndk_include, 'toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativebase/include/'),
   # local shim includes
-#  join_paths('.', 'include/'),
-#  join_paths(extra_include, 'include'),
-#  join_paths(extra_include, 'include/libdrm'),
   join_paths('.', 'include/stable-c-v34/include'),
   join_paths('.', 'include/stable-c-v34/implutils/include/')
 )
@@ -122,7 +119,6 @@ libdrm_dep = dependency(
 )
 
 common_deps = [
-#  dependency('libdrm', static: true, method: 'pkg-config', fallback: ['libdrm', 'libdrm_dep'], version: '>=2.4.100',),
   libdrm_dep,
   dependency('libcutils', required: false),
   dependency('liblog', required: false)
@@ -204,7 +200,7 @@ gralloc_minigbm = library('gralloc.minigbm',
 )
 
 # === Intel gralloc (x86/x86_64 only) ===
-if 'intel' in drivers and (cpu_family == 'x86' or cpu_family == 'x86_64')
+if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
   libminigbm_gralloc_intel = library('minigbm_gralloc_intel',
     sources: core_sources + libminigbm_gralloc_intel_sources + gralloc_common_sources,
     include_directories: [inc, inc_extra],
