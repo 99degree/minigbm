@@ -4,11 +4,11 @@
 #make
 
     meson setup "build-android" \
-	--prefix=/tmp/mesa \
+	--prefix=/tmp/minigbm \
 	--cross-file "../build-crossfile" \
-	-Ddefault_library=static \
 	-Dndk_root=/usr/android-ndk-r27d/ \
 	--force-fallback-for=libdrm \
+	-Dlibdrm:default_library=static \
 	-Dlibdrm:freedreno-kgsl=true \
 	-Dlibdrm:intel=auto \
 	-Dlibdrm:radeon=auto \
@@ -22,4 +22,5 @@
 	-Dlibdrm:exynos=enabled \
 	-Dlibdrm:vc4=enabled
 
+#        -Ddefault_library=static \
           ninja -C "build-android" install
