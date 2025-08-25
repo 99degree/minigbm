@@ -2,3 +2,4 @@
 directory = libdrm
 url = https://gitlab.freedesktop.org/mesa/drm.git
 revision = main
+depth = 1
