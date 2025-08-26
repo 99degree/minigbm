@@ -118,7 +118,8 @@ meson_cflags   = ['-DDRV_MESON']
 msm_cflags     = ['-DDRV_MSM', '-DQCOM_DISABLE_COMPRESSED_NV12', '-DHAS_DMABUF_SYSTEM_HEAP']
 arcvm_cflags   = ['-DVIRTIO_GPU_NEXT']
 
-common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
+common_link_args = []
+#['-Wl,--unresolved-symbols=ignore-all']
 
 # Try to find system libdrm first, fall back to subproject if missing
 libdrm_dep = dependency(
@@ -431,7 +432,7 @@ shared_lib_mapper_msm = library(
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
   dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
-  link_with : libminigbm_gralloc,
+  link_with : libminigbm_gralloc_msm,
   link_args : common_link_args,
   install : true
 )
@@ -441,7 +442,7 @@ shared_lib_mapper_arcvm = library(
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
   dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
-  link_with : libminigbm_gralloc,
+  link_with : libminigbm_gralloc_arcvm,
   link_args : common_link_args,
   install : true
 )
@@ -452,7 +453,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     minigbm_gralloc4_mapper_files,
     include_directories : [common_includes, inc_extra],
     dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
-    link_with : libminigbm_gralloc,
+    link_with : libminigbm_gralloc_intel,
     link_args : common_link_args,
     install : true
   )
