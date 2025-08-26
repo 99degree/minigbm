@@ -124,7 +124,7 @@ common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
 libdrm_dep = dependency(
   'libdrm',
   version: '>=2.4.100',
-  required: false,
+  required: true,
   fallback: ['libdrm', 'libdrm_dep'],
   static: true
 )
@@ -208,7 +208,7 @@ libminigbm_gralloc = library('minigbm_gralloc',
   include_directories: [inc, inc_extra],
   c_args: common_cflags + generic_cflags,
   link_args: common_link_args,
-  dependencies: common_deps,
+  dependencies: common_deps, 
   install: true
 )
 
@@ -339,7 +339,7 @@ minigbm_gralloc4_mapper_files = files(
 common_includes = include_directories('.')
 common_cflags = ['-Wno-sign-compare']
 
-common_deps = [
+common_hidl_deps = [
   dependency('android.hardware.graphics.mapper@4.0', required : false),
   dependency('libgralloctypes', required : false),
   dependency('libhidlbase', required : false),
@@ -353,11 +353,11 @@ libminigbm_gralloc4_utils = library(
   'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
   include_directories : [common_includes, inc_extra,],
   dependencies : [
-    dependency('android.hardware.graphics.mapper@4.0', required : false),
-    dependency('libgralloctypes', required : false),
-    dependency('libhidlbase', required : false),
-    dependency('libminigbm_gralloc', required : false),
+    common_hidl_deps,
+    dependency('libcutils', required: false),
+    dependency('liblog', required: false)
   ],
+  link_with : libminigbm_gralloc,   # <-- add this
   install : true
 )
 
@@ -370,7 +370,7 @@ allocator_defaults_deps = common_deps + [
 executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm',
   minigbm_gralloc4_allocator_files,
-  link_with : libminigbm_gralloc,
+  link_with : [libminigbm_gralloc,],
   include_directories : [common_includes, inc_extra],
   dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc', required : false) ],
   link_args: common_link_args,
