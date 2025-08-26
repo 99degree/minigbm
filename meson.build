@@ -83,9 +83,16 @@ inc_extra_v34 = include_directories(
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativewindow/include/'),
   # nativebase.h
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/nativebase/include/'),
+  #
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/common/aidl/android.hardware.common-V2-ndk-source/gen/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/binder/ndk/include_platform/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/4.0/android.hardware.graphics.allocator@4.0_genc++_headers/gen/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'),
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhidl/transport/include/'),
   # local shim includes
   join_paths('.', 'include/stable-c-v34/include'),
-  join_paths('.', 'include/stable-c-v34/implutils/include/')
+  join_paths('.', 'include/stable-c-v34/implutils/include/'),
+  join_paths('.', 'include/')
 )
 
 if target_machine.system() == 'android'
@@ -143,11 +150,14 @@ core_sources = files(
   'xe.c'
 )
 
-gralloc_common_sources = files(
+cros_gralloc_common_sources = files(
   'cros_gralloc/cros_gralloc_buffer.cc',
   'cros_gralloc/cros_gralloc_driver.cc',
   'cros_gralloc/cros_gralloc_helpers.cc',
-  'cros_gralloc/mapper_stablec/Mapper.cpp'
+)
+
+mapper5_common_source = files(
+  'cros_gralloc/mapper_stablec/Mapper.cpp',
 )
 
 gralloc0_sources = files()  # currently empty
@@ -184,7 +194,7 @@ libgbm = library('gbm',
 
 # === Generic gralloc ===
 libminigbm_gralloc = library('minigbm_gralloc',
-  sources: core_sources + gralloc_common_sources + libminigbm_gralloc_sources,
+  sources: core_sources + cros_gralloc_common_sources + libminigbm_gralloc_sources,
   include_directories: [inc, inc_extra],
   c_args: common_cflags + generic_cflags,
   link_args: common_link_args,
@@ -203,7 +213,12 @@ gralloc_minigbm = library('gralloc.minigbm',
 # === Intel gralloc (x86/x86_64 only) ===
 if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
   libminigbm_gralloc_intel = library('minigbm_gralloc_intel',
-    sources: core_sources + libminigbm_gralloc_intel_sources + gralloc_common_sources,
+    sources: [
+		core_sources,
+		libminigbm_gralloc_intel_sources,
+		cros_gralloc_common_sources,
+#		libminigbm_gralloc_intel
+	     ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + intel_cflags + ['-msse2'],
     link_args: common_link_args,
@@ -223,7 +238,12 @@ endif
 # === Meson gralloc ===
 if 'meson' in drivers
   libminigbm_gralloc_meson = library('minigbm_gralloc_meson',
-    sources: core_sources + libminigbm_gralloc_meson_sources + gralloc_common_sources,
+    sources: [
+                core_sources,
+                libminigbm_gralloc_meson_sources,
+                cros_gralloc_common_sources,
+#                libminigbm_gralloc_meson
+             ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + meson_cflags,
     link_args: common_link_args,
@@ -243,7 +263,12 @@ endif
 # === MSM gralloc ===
 if 'msm' in drivers
   libminigbm_gralloc_msm = library('minigbm_gralloc_msm',
-    sources: core_sources + libminigbm_gralloc_msm_sources + gralloc_common_sources,
+    sources: [
+                core_sources,
+                libminigbm_gralloc_msm_sources,
+                cros_gralloc_common_sources,
+#                libminigbm_gralloc_msm
+             ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + msm_cflags,
     link_args: common_link_args,
@@ -266,7 +291,12 @@ endif
 # === ARCVM gralloc ===
 if 'arcvm' in drivers
   libminigbm_gralloc_arcvm = library('minigbm_gralloc_arcvm',
-    sources: core_sources + libminigbm_gralloc_arcvm_sources + gralloc_common_sources,
+    sources: [
+                core_sources,
+                libminigbm_gralloc_arcvm_sources,
+                cros_gralloc_common_sources,
+#                libminigbm_gralloc_arcvm
+             ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + arcvm_cflags,
     link_args: common_link_args,
@@ -282,6 +312,211 @@ if 'arcvm' in drivers
     install: true
   )
 endif
+
+# --- File groups ---
+minigbm_gralloc4_allocator_files = files(
+  'cros_gralloc/gralloc4/CrosGralloc4Allocator.cc',
+  'cros_gralloc/gralloc4/CrosGralloc4AllocatorService.cc',
+  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+)
+
+minigbm_gralloc4_mapper_files = files(
+  'cros_gralloc/gralloc4/CrosGralloc4Mapper.cc',
+  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+)
+
+# --- Common defaults ---
+common_includes = include_directories('.')
+common_cflags = ['-Wno-sign-compare']
+
+common_deps = [
+  dependency('android.hardware.graphics.mapper@4.0', required : false),
+  dependency('libgralloctypes', required : false),
+  dependency('libhidlbase', required : false),
+  dependency('libbase', required : false),
+  dependency('libutils', required : false),
+]
+
+# --- libminigbm_gralloc4_utils ---
+libminigbm_gralloc4_utils = library(
+  'minigbm_gralloc4_utils',
+  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+  include_directories : [common_includes, inc_extra,],
+  dependencies : [
+    dependency('android.hardware.graphics.mapper@4.0', required : false),
+    dependency('libgralloctypes', required : false),
+    dependency('libhidlbase', required : false),
+    dependency('libminigbm_gralloc', required : false),
+  ],
+  install : true
+)
+
+# --- Allocator defaults ---
+allocator_defaults_deps = common_deps + [
+  dependency('android.hardware.graphics.allocator@4.0', required : false),
+]
+
+# --- allocator service binaries ---
+executable(
+  'android.hardware.graphics.allocator@4.0-service.minigbm',
+  minigbm_gralloc4_allocator_files,
+  link_with : libminigbm_gralloc,
+  include_directories : [common_includes, inc_extra],
+  dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  install : true,
+  install_dir : join_paths(get_option('libexecdir'), 'hw')
+)
+
+executable(
+  'android.hardware.graphics.allocator@4.0-service.minigbm_msm',
+  minigbm_gralloc4_allocator_files,
+  link_with : libminigbm_gralloc_msm,
+  include_directories : [common_includes, inc_extra],
+  dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
+  install : true,
+  install_dir : join_paths(get_option('libexecdir'), 'hw')
+)
+
+executable(
+  'android.hardware.graphics.allocator@4.0-service.minigbm_arcvm',
+  minigbm_gralloc4_allocator_files,
+  link_with : libminigbm_gralloc_arcvm,
+  include_directories : [common_includes, inc_extra],
+  dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
+  install : true,
+  install_dir : join_paths(get_option('libexecdir'), 'hw')
+)
+
+# Intel variant (only for x86/x86_64)
+if host_machine.cpu_family() in ['x86', 'x86_64']
+  executable(
+    'android.hardware.graphics.allocator@4.0-service.minigbm_intel',
+    minigbm_gralloc4_allocator_files,
+    link_with : libminigbm_gralloc_intel,
+    include_directories : [common_includes, inc_extra],
+    dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
+    install : true,
+    install_dir : join_paths(get_option('libexecdir'), 'hw')
+  )
+endif
+
+# --- Mapper shared libraries ---
+shared_lib_mapper_minigbm = library(
+  'android.hardware.graphics.mapper@4.0-impl.minigbm',
+  minigbm_gralloc4_mapper_files,
+  include_directories : [common_includes, inc_extra],
+  dependencies : common_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  install : true
+)
+
+shared_lib_mapper_msm = library(
+  'android.hardware.graphics.mapper@4.0-impl.minigbm_msm',
+  minigbm_gralloc4_mapper_files,
+  include_directories : [common_includes, inc_extra],
+  dependencies : common_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
+  install : true
+)
+
+shared_lib_mapper_arcvm = library(
+  'android.hardware.graphics.mapper@4.0-impl.minigbm_arcvm',
+  minigbm_gralloc4_mapper_files,
+  include_directories : [common_includes, inc_extra],
+  dependencies : common_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
+  install : true
+)
+
+if host_machine.cpu_family() in ['x86', 'x86_64']
+  shared_lib_mapper_intel = library(
+    'android.hardware.graphics.mapper@4.0-impl.minigbm_intel',
+    minigbm_gralloc4_mapper_files,
+    include_directories : [common_includes, inc_extra],
+    dependencies : common_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
+    install : true
+  )
+endif
+
+# --- Install VINTF fragments and init_rc files ---
+install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0.xml',
+  install_dir : join_paths(get_option('datadir'), 'vintf')
+)
+install_data('cros_gralloc/gralloc4/android.hardware.graphics.mapper@4.0.xml',
+  install_dir : join_paths(get_option('datadir'), 'vintf')
+)
+
+install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0-service.minigbm.rc',
+  install_dir : join_paths(get_option('sysconfdir'), 'init')
+)
+install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0-service.minigbm_msm.rc',
+  install_dir : join_paths(get_option('sysconfdir'), 'init')
+)
+install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0-service.minigbm_arcvm.rc',
+  install_dir : join_paths(get_option('sysconfdir'), 'init')
+)
+if host_machine.cpu_family() in ['x86', 'x86_64']
+  install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0-service.minigbm_intel.rc',
+    install_dir : join_paths(get_option('sysconfdir'), 'init')
+  )
+endif
+
+# Shared library dependencies (pkg-config or system)
+dep_allocator_ndk = dependency('android.hardware.graphics.allocator-V2-ndk', required : false)
+dep_mapper4       = dependency('android.hardware.graphics.mapper@4.0', required : false)
+dep_libbase       = dependency('libbase', required : false)
+dep_binder_ndk    = dependency('libbinder_ndk', required : false)
+dep_gralloctypes  = dependency('libgralloctypes', required : false)
+dep_hidlbase      = dependency('libhidlbase', required : false)
+dep_log           = dependency('liblog', required : false)
+dep_minigbm_gralloc = dependency('libminigbm_gralloc', required : false)
+dep_minigbm_utils   = dependency('libminigbm_gralloc4_utils', required : false)
+
+# Static library dependencies (built in-tree or via subproject)
+#dep_aidlcommonsupport = dependency('libaidlcommonsupport', required : false)
+
+# Group them for convenience
+all_deps = [
+  dep_allocator_ndk,
+  dep_mapper4,
+  dep_libbase,
+  dep_binder_ndk,
+  dep_gralloctypes,
+  dep_hidlbase,
+  dep_log,
+  dep_minigbm_gralloc,
+  dep_minigbm_utils,
+  #dep_aidlcommonsupport,
+]
+
+
+# Shared libraries
+shared_libs = [
+  'android.hardware.graphics.allocator-V2-ndk',
+  'android.hardware.graphics.mapper@4.0',
+  'libbase',
+  'libbinder_ndk',
+  'libgralloctypes',
+  'libhidlbase',
+  'liblog',
+  'libminigbm_gralloc',
+  'libminigbm_gralloc4_utils',
+]
+
+srcs = files(
+  'cros_gralloc/aidl/Allocator.cpp',
+  'cros_gralloc/aidl/Main.cpp',
+  'cros_gralloc/aidl/NativeHandle.cpp',
+)
+
+# Binary target
+executable(
+  'android.hardware.graphics.allocator-service.minigbm',
+  srcs,
+  include_directories : [inc_extra,],
+  link_with : libminigbm_gralloc,
+  dependencies : [all_deps, libdrm_dep],
+  install : true,
+  #install_dir : join_paths(get_option('libexecdir'), 'hw')
+  install_dir : join_paths(get_option('libdir'), 'hw')
+)
 
 # === Header installs ===
 install_headers('gbm.h', subdir: '')
