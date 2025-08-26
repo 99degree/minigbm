@@ -182,6 +182,13 @@ gralloc_minigbm_arcvm_sources    = files()
 ##### TRUNK 1 END #####
 ##### TRUNK 2 START: Target definitions using shared common_* variables #####
 
+# === global define ===
+libminigbm_gralloc = []
+libminigbm_gralloc_intel = []
+libminigbm_gralloc_meson = []
+libminigbm_gralloc_msm = []
+libminigbm_gralloc_arcvm = []
+
 # === libgbm ===
 libgbm = library('gbm',
   sources: core_sources + libgbm_sources,
@@ -363,6 +370,7 @@ executable(
   link_with : libminigbm_gralloc,
   include_directories : [common_includes, inc_extra],
   dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  link_args: common_link_args,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
@@ -373,6 +381,7 @@ executable(
   link_with : libminigbm_gralloc_msm,
   include_directories : [common_includes, inc_extra],
   dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
+  link_args: common_link_args,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
@@ -383,6 +392,7 @@ executable(
   link_with : libminigbm_gralloc_arcvm,
   include_directories : [common_includes, inc_extra],
   dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
+  link_args: common_link_args,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
@@ -395,6 +405,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     link_with : libminigbm_gralloc_intel,
     include_directories : [common_includes, inc_extra],
     dependencies : allocator_defaults_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
+    link_args: common_link_args,
     install : true,
     install_dir : join_paths(get_option('libexecdir'), 'hw')
   )
@@ -513,6 +524,7 @@ executable(
   include_directories : [inc_extra,],
   link_with : libminigbm_gralloc,
   dependencies : [all_deps, libdrm_dep],
+  link_args: common_link_args,
   install : true,
   #install_dir : join_paths(get_option('libexecdir'), 'hw')
   install_dir : join_paths(get_option('libdir'), 'hw')
