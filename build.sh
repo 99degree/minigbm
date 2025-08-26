@@ -3,7 +3,7 @@
 #CC=/usr/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android33-clang \
 #make
 
-    meson setup "build-android" \
+    meson  setup --reconfigure "build-android" \
 	--prefix=/tmp/minigbm \
 	--cross-file "../build-crossfile" \
 	-Dndk_root=/usr/android-ndk-r27d/ \
@@ -22,5 +22,6 @@
 	-Dlibdrm:exynos=enabled \
 	-Dlibdrm:vc4=enabled
 
+#  meson compile -C build-android android.hardware.graphics.allocator-service.minigbm
 #        -Ddefault_library=static \
           ninja -C "build-android" install

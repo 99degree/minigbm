@@ -358,6 +358,7 @@ libminigbm_gralloc4_utils = library(
     dependency('liblog', required: false)
   ],
   link_with : libminigbm_gralloc,   # <-- add this
+  link_args: common_link_args,
   install : true
 )
 
@@ -419,7 +420,9 @@ shared_lib_mapper_minigbm = library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
-  dependencies : common_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  link_with : libminigbm_gralloc,
+  link_args : common_link_args,
   install : true
 )
 
@@ -427,7 +430,9 @@ shared_lib_mapper_msm = library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_msm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
-  dependencies : common_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
+  dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
+  link_with : libminigbm_gralloc,
+  link_args : common_link_args,
   install : true
 )
 
@@ -435,7 +440,9 @@ shared_lib_mapper_arcvm = library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_arcvm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
-  dependencies : common_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
+  dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_arcvm', required : false) ],
+  link_with : libminigbm_gralloc,
+  link_args : common_link_args,
   install : true
 )
 
@@ -444,7 +451,9 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     'android.hardware.graphics.mapper@4.0-impl.minigbm_intel',
     minigbm_gralloc4_mapper_files,
     include_directories : [common_includes, inc_extra],
-    dependencies : common_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
+    dependencies : common_hidl_deps + [ dependency('libminigbm_gralloc_intel', required : false) ],
+    link_with : libminigbm_gralloc,
+    link_args : common_link_args,
     install : true
   )
 endif
