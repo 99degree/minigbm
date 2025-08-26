@@ -89,6 +89,9 @@ inc_extra_v34 = include_directories(
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/allocator/4.0/android.hardware.graphics.allocator@4.0_genc++_headers/gen/'),
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'),
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhidl/transport/include/'),
+
+  # framework and libhwbinder both have IBinder.h
+  join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhwbinder/include/'),
   # local shim includes
   join_paths('.', 'include/stable-c-v34/include'),
   join_paths('.', 'include/stable-c-v34/implutils/include/'),
