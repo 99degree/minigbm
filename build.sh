@@ -20,7 +20,8 @@
 	-Dlibdrm:tegra=enabled \
 	-Dlibdrm:etnaviv=enabled \
 	-Dlibdrm:exynos=enabled \
-	-Dlibdrm:vc4=enabled
+	-Dlibdrm:vc4=enabled \
+	-Ddrivers=msm
 
 #  meson compile -C build-android android.hardware.graphics.allocator-service.minigbm
 #        -Ddefault_library=static \
