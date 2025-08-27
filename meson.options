@@ -10,3 +10,11 @@ option('drivers',
 option('ndk_root',
        type : 'string',
        description : 'Path to Android NDK root')
+
+option('sdk_ver',
+       type : 'string',
+       description : 'Set SDK version')
+
+option('SDK_VER',
+       type : 'string',
+       description : 'Set SDK version')
