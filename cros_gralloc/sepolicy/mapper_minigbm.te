@@ -1,0 +1,5 @@
+# mapper_minigbm.te
+type mapper_minigbm, domain;
+type mapper_minigbm_exec, exec_type, file_type;
+
+init_daemon_domain(mapper_minigbm)

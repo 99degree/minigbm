@@ -6,6 +6,11 @@ out-of-tree build by meson. For further info about Mesa3D Vulkan driver please r
 ## Caution
 This is for only compile test. Not tested with actual device, dont use for daily drive.
 
+## Download
+A copy of minigbm is compiled and uploaded by github action. Grab it from below:
+
+https://github.com/99degree/android-mesa-build/actions
+
 ## Intro
 There are some changes added without modify any of original code.
 Inorder to make the library works with Android 14+ with Mapper V5 stable-c api,
@@ -31,25 +36,22 @@ Before compile minigbm, libdrm is needed as libdrm.a this case.
 > - git clone https://gitlab.freedesktop.org/mesa/drm.git --depth=1 
 > - cd drm 
 > - wget https://github.com/99degree/android-mesa-build/raw/refs/heads/master/android-drm-aarch64 
-> - meson setup "build-android" \
-            --prefix=/tmp/drm-static \
-            --cross-file "android-drm-aarch64" \
-            -Ddefault_library=static \
-            -Dintel=disabled \
-            -Dradeon=disabled \
-            -Damdgpu=disabled \
-            -Dnouveau=disabled \
-            -Dvmwgfx=disabled \
-            -Dfreedreno=enabled \
-            -Dvc4=disabled \
-            -Detnaviv=disabled \
+> - meson setup "build-android" \ \
+            --prefix=/tmp/drm-static \ \
+            --cross-file "android-drm-aarch64" \ \
+            -Ddefault_library=static \ \
+            -Dintel=disabled \ \
+            -Dradeon=disabled \ \
+            -Damdgpu=disabled \ \
+            -Dnouveau=disabled \ \
+            -Dvmwgfx=disabled \ \
+            -Dfreedreno=enabled \ \
+            -Dvc4=disabled \ \
+            -Detnaviv=disabled \ \
             -Dfreedreno-kgsl=true
-          ninja -C "build-android" install
+>  - ninja -C "build-android" install
 
 This is for compiling exclusively *MSM/QCOM* platform. Other platform change above accordingly.
-
-Some changes are needed for other platform than arm64:
-- meson.build
 
 You also need to modify the ndk/vndk location too. 
 > curl https://dl.google.com/android/repository/android-ndk-r27d-linux.zip --output android-ndk-r27d-linux.zip &> /dev/null \
@@ -76,8 +78,22 @@ To start compile, type below or just directly checkout my tree:
 >  git fetch 99degree local-main \
 >  git merge 99degree/local-main \
 >  wget https://github.com/99degree/android-mesa-build/raw/refs/heads/master/android-aarch64  \
+
+Make change to cross build file android-aarch64, those ndk path etc are needed to change.
 >  meson setup build-android --prefix=/tmp/minigbm -Dextra_include=/tmp/drm-static/ --cross-file  android-aarch64 \
 >  ninja -C build-android install
+
+_OR_ if your NDK is located at /usr/share/android-ndk-r27d/ then you can add meson option -Dndk_include as below:
+> meson setup build-android
+>    -Dndk_include=/usr/share/android-ndk-r27d/ \ \
+>    --prefix=/tmp/minigbm \ \
+>    -Dextra_include=/tmp/drm-static/ \ \
+>    --cross-file  android-aarch64 \ \
+> ninja -C build-android install
+
+_AND_ vndk has to be in this arrangement:
+> SOME_FOLDER/android-ndk-r27d/prebuilt/vndk/v34
+
 
 So all generated library is located at /tmp/minigbm/lib/
 
@@ -115,6 +131,10 @@ Some tools are needed:
 >    libxrandr-dev libxxf86vm-dev libxcb-*-dev libx11-xcb-dev libxfixes-dev libdrm-dev libx11-dev
 >    glslang-tools libclc-18-dev libclc-18 gcc-13-aarch64-linux-gnu
 
+Note: 
+- ndk r27c is not android 14+ compatible, so ndk r27d LTS is prefered.
+- vndk 34 is last one support out-of-tree build and first one to introduce Mapper5 stable-c api
+
 ## Install
 From Copilot, below is needed once to use it:
 > setprop debug.mapper.impl minigbm
@@ -139,5 +159,6 @@ Dont forget to add mapper.minigbm.xml to vintf/
 ## Reference
 [1]https://android.googlesource.com/platform/external/minigbm/+/refs/heads/main \
 [2]https://android.googlesource.com/platform/prebuilts/vndk/v34/ \
-[3]https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-[4]https://github.com/99degree/android-mesa-build/actions/
+[3]https://dl.google.com/android/repository/android-ndk-r27d-linux.zip \
+[4]https://github.com/99degree/android-mesa-build/actions/ \
+

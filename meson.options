@@ -1,35 +1,20 @@
-# meson.options
-option(
-  'extra_include',
-  type : 'string',
-  value : '',
-  description : 'Path prefix for extra include directories (e.g. Android headers)'
+option('drivers',
+  type: 'array',
+  choices: [
+    'amdgpu', 'i915', 'xe', 'meson', 'msm', 'vc4',
+    'mediatek', 'rockchip', 'virtgpu', 'radeon'
+  ],
+  description: 'List of GPU backends to build'
 )
 
-option(
-  'enable_intel',
-  type : 'boolean',
-  value : true,
-  description : 'Enable Intel i915/xe driver build flags'
-)
+option('ndk_root',
+       type : 'string',
+       description : 'Path to Android NDK root')
 
-option(
-  'enable_meson',
-  type : 'boolean',
-  value : true,
-  description : 'Enable Amlogic Meson driver build flags'
-)
+option('sdk_ver',
+       type : 'string',
+       description : 'Set SDK version')
 
-option(
-  'enable_msm',
-  type : 'boolean',
-  value : true,
-  description : 'Enable Qualcomm MSM driver build flags'
-)
-
-option(
-  'enable_arcvm',
-  type : 'boolean',
-  value : true,
-  description : 'Enable ARCVM virtio‑gpu‑next driver build flags'
-)
+option('SDK_VER',
+       type : 'string',
+       description : 'Set SDK version')

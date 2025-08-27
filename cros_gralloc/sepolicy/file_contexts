@@ -1,0 +1,11 @@
+# Vendor partition
+/vendor/lib(64)?/hw/mapper\.minigbm\.so           u:object_r:vendor_hal_file:s0
+
+# ODM partition
+/odm/lib(64)?/hw/mapper\.minigbm\.so              u:object_r:odm_hal_file:s0
+
+# Product partition
+/product/lib(64)?/hw/mapper\.minigbm\.so          u:object_r:product_hal_file:s0
+
+# System_ext partition
+/system_ext/lib(64)?/hw/mapper\.minigbm\.so       u:object_r:system_ext_hal_file:s0

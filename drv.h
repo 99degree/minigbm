@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-#include <drm_fourcc.h>
+#include <drm/drm_fourcc.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>

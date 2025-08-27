@@ -1,0 +1,13 @@
+{
+  "name": "com.android.mapper.minigbm",
+  "version": 1,
+  "provides": [
+    "mapper"
+  ],
+  "requires": [],
+  "preInstallHook": "",
+  "postInstallHook": "",
+  "overrides": [],
+  "isFactory": false,
+  "isActive": true
+}
