@@ -173,6 +173,7 @@ common_link_args = []
 nosym_link_args = [
   '-Wl,-rpath,' + vndk_sp,
   '-Wl,-rpath,' + vndk_llndk_stub,
+  '-Wl,-rpath,' + vndk_core,
 ]
 #nosym_link_args = ['-Wl,--unresolved-symbols=ignore-all']
 #common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
@@ -488,6 +489,7 @@ foreach name : hidl_libs
   endif
 endforeach  
 
+if true
 # --- libminigbm_gralloc4_utils ---
 libminigbm_gralloc4_utils = library(
   'minigbm_gralloc4_utils',
@@ -514,7 +516,11 @@ executable(
   minigbm_gralloc4_allocator_files,
   link_with : [libminigbm_gralloc,],
   include_directories : [common_includes, inc_extra],
-  dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  dependencies : [
+	common_deps,
+	common_hidl_deps,
+	dependency('libminigbm_gralloc', required : false),
+  ],
   cpp_args: common_cflags,
   c_args: common_cflags,
   link_args: [common_link_args, nosym_link_args],
@@ -636,7 +642,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
 endif
-
+endif
 # --- Install VINTF fragments and init_rc files ---
 install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0.xml',
   install_dir : join_paths(get_option('datadir'), 'vintf')
@@ -661,45 +667,39 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 endif
 
 # Shared library dependencies (pkg-config or system)
-dep_allocator_ndk = dependency('android.hardware.graphics.allocator-V2-ndk', required : false)
-dep_mapper4       = dependency('android.hardware.graphics.mapper@4.0', required : false)
-dep_libbase       = dependency('libbase', required : false)
-dep_binder_ndk    = dependency('libbinder_ndk', required : false)
-dep_gralloctypes  = dependency('libgralloctypes', required : false)
-dep_hidlbase      = dependency('libhidlbase', required : false)
-dep_log           = dependency('liblog', required : false)
-#dep_minigbm_gralloc = dependency('libminigbm_gralloc', required : false)
-#dep_minigbm_utils   = dependency('libminigbm_gralloc4_utils', required : false)
-
-# Static library dependencies (built in-tree or via subproject)
-#dep_aidlcommonsupport = dependency('libaidlcommonsupport', required : false)
-
-# Group them for convenience
-all_aosp_deps = [
-  dep_allocator_ndk,
-  dep_mapper4,
-  dep_libbase,
-  dep_binder_ndk,
-  dep_gralloctypes,
-  dep_hidlbase,
-  dep_log,
-#  dep_minigbm_gralloc,
-#  dep_minigbm_utils,
-  #dep_aidlcommonsupport,
+# Map of variable names -> pkg names
+dep_names = [
+    'android.hardware.graphics.allocator-V2-ndk',
+    'android.hardware.graphics.mapper@4.0',
+    'libbase',
+    'libbinder_ndk',
+    'libgralloctypes',
+    'libhidlbase',
+    'liblog',
 ]
 
+aidl_deps = []
+foreach name : dep_names
+    d = cc.find_library(name, required: false, dirs: [vndk_llndk_stub, vndk_sp, vndk_core])
+    if d.found()
+        aidl_deps += [d]
+    endif
+endforeach
 
 # Shared libraries
 shared_libs = [
   'android.hardware.graphics.allocator-V2-ndk',
+  'android.hardware.graphics.allocator@4.0',
   'android.hardware.graphics.mapper@4.0',
+  'android.hardware.graphics.allocator@2.0',
   'libbase',
   'libbinder_ndk',
   'libgralloctypes',
   'libhidlbase',
   'liblog',
   'libminigbm_gralloc',
-  'libminigbm_gralloc4_utils',
+  'libhidlallocatorutils',
+ # 'libminigbm_gralloc4_utils',
 ]
 
 srcs = files(
@@ -708,21 +708,33 @@ srcs = files(
   'cros_gralloc/aidl/NativeHandle.cpp',
 )
 
+if false
+# Below are missing:
+#  aidl::android::hardware::graphics::allocator::BnAllocator
+#  convertToCrosDescriptor()
+#
 # Binary target
 executable(
   'android.hardware.graphics.allocator-service.minigbm',
   srcs,
   include_directories : [inc_extra,],
-  link_with : [libminigbm_gralloc4_utils,],
+#  link_with : [libminigbm_gralloc4_utils,],
 # suppose all libdrm symbols are gone through minigbm and libminigbm_gralloc4_utils will
 # link with minigbm statically.
 #  link_with : [libdrm_dep,],
-  dependencies : [all_aosp_deps, libminigbm_gralloc_dep, libdrm_dep,],
-  link_args: [common_link_args, nosym_link_args],
+  dependencies : [
+	common_deps,
+	aidl_deps,
+	libminigbm_gralloc_dep,
+	libdrm_dep,
+  ],
+  link_args: [common_link_args, nosym_link_args ],
+# + ['-Wl,--unresolved-symbols=ignore-all'],
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
   #install_dir : join_paths(get_option('libdir'), 'hw')
 )
+endif
 
 # === Header installs ===
 install_headers('gbm.h', subdir: '')
