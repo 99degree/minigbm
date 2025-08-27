@@ -316,6 +316,7 @@ libminigbm_gralloc = library('minigbm_gralloc',
   c_args: common_cflags + generic_cflags,
   link_args: [common_link_args, nosym_link_args],
   dependencies: common_deps,
+  name_prefix : '',
   install: true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -331,6 +332,7 @@ gralloc_minigbm = library('gralloc.minigbm',
   include_directories: [inc, inc_extra],
   dependencies: [declare_dependency(link_with: libminigbm_gralloc)],
   link_args: common_link_args,
+  name_prefix : '',
   install: true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -349,6 +351,7 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
     c_args: common_cflags + intel_cflags + ['-msse2'],
     link_args: common_link_args,
     dependencies: common_deps,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -358,6 +361,7 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
     include_directories: [inc, inc_extra],
     dependencies: [declare_dependency(link_with: libminigbm_gralloc_intel)],
     link_args: common_link_args,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -377,6 +381,7 @@ if 'meson' in drivers
     c_args: common_cflags + meson_cflags,
     link_args: [common_link_args, nosym_link_args],
     dependencies: common_deps,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -386,6 +391,7 @@ if 'meson' in drivers
     include_directories: [inc, inc_extra],
     dependencies: [declare_dependency(link_with: libminigbm_gralloc_meson)],
     link_args: common_link_args,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -405,6 +411,7 @@ if 'msm' in drivers
     c_args: common_cflags + msm_cflags,
     link_args: [common_link_args, nosym_link_args],
     dependencies: common_deps,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -414,6 +421,7 @@ if 'msm' in drivers
     include_directories: [inc, inc_extra],
     dependencies: [declare_dependency(link_with: libminigbm_gralloc_msm)],
     link_args: common_link_args,
+    name_prefix : '',
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -435,6 +443,7 @@ if 'arcvm' in drivers
     include_directories: [inc, inc_extra],
     c_args: common_cflags + arcvm_cflags,
     link_args: common_link_args,
+    name_prefix : '',
     dependencies: common_deps,
     install: true
   )
@@ -444,6 +453,7 @@ if 'arcvm' in drivers
     include_directories: [inc, inc_extra],
     dependencies: [declare_dependency(link_with: libminigbm_gralloc_arcvm)],
     link_args: common_link_args,
+    name_prefix : '',
     install: true
   )
 endif
@@ -473,6 +483,7 @@ hidl_libs = [
   'android.hidl.base@1.0',
   'libgralloctypes',
   'libhidlbase',
+  'libhidltransport',
   'libbase',
   'libutils',
   'liblog',
@@ -484,24 +495,30 @@ foreach name : hidl_libs
   dep = cc.find_library(name, required: false, dirs: [vndk_llndk_stub, vndk_sp, vndk_core])
   if dep.found()
     common_hidl_deps += dep
+    message('lib found:' + name)
   else
     message('lib not found:' + name)
   endif
 endforeach  
 
-if true
+# Too bad Android 15 no longer have android.hidl.base@0 so hidl cant be built!!
+if false
 # --- libminigbm_gralloc4_utils ---
 libminigbm_gralloc4_utils = library(
   'minigbm_gralloc4_utils',
   'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
-  'cros_gralloc/String_shim.cpp',
+#  'cros_gralloc/String_shim.cpp',
   include_directories : [common_includes, inc_extra,],
   dependencies : [
     common_hidl_deps,
     common_deps,
   ],
   link_with : libminigbm_gralloc,
-  link_args: [common_link_args, nosym_link_args],
+  link_args: [
+	common_link_args,
+	nosym_link_args,
+	'-llibhidlbase',
+  ],
   install : true
 )
 
@@ -535,7 +552,12 @@ executable(
   link_with : libminigbm_gralloc_msm,
   include_directories : [common_includes, inc_extra],
   dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
-  link_args: [common_link_args, nosym_link_args],
+  link_args: [
+	common_link_args,
+	nosym_link_args,
+	'-landroid.hardware.graphics.allocator@4.0',
+	'-landroid.hidl.base@1.0',
+  ],
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
@@ -588,6 +610,7 @@ shared_lib_mapper_minigbm = library(
   ],
   link_with : libminigbm_gralloc,
   link_args : [common_link_args, nosym_link_args],
+  name_prefix : '',
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -603,7 +626,14 @@ shared_lib_mapper_msm = library(
 	dependency('libminigbm_gralloc_msm', required : false),
    ],
   link_with : libminigbm_gralloc_msm,
-  link_args : [common_link_args, nosym_link_args],
+  link_args: [
+        common_link_args,
+        nosym_link_args,
+        '-landroid.hardware.graphics.allocator@4.0',
+        '-landroid.hidl.base@1.0',
+	'-landroid.hardware.graphics.mapper@4.0',
+  ],
+  name_prefix : '',
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -621,6 +651,7 @@ shared_lib_mapper_arcvm = library(
   ],
   link_with : libminigbm_gralloc_arcvm,
   link_args : common_link_args,
+  name_prefix : '',
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -638,6 +669,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     ],
     link_with : libminigbm_gralloc_intel,
     link_args : common_link_args,
+    name_prefix : '',
     install : true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -706,6 +738,7 @@ srcs = files(
   'cros_gralloc/aidl/Allocator.cpp',
   'cros_gralloc/aidl/Main.cpp',
   'cros_gralloc/aidl/NativeHandle.cpp',
+#  'cros_gralloc/aidl/BnAllocator.cpp',
 )
 
 if false
@@ -728,7 +761,11 @@ executable(
 	libminigbm_gralloc_dep,
 	libdrm_dep,
   ],
-  link_args: [common_link_args, nosym_link_args ],
+  link_args: [
+	common_link_args, 
+	nosym_link_args,
+#	'-landroid.hardware.graphics.allocator-V2-ndk',
+  ],
 # + ['-Wl,--unresolved-symbols=ignore-all'],
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
