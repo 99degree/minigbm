@@ -468,6 +468,7 @@ common_cflags = ['-Wno-sign-compare']
 hidl_libs = [
   'android.hardware.graphics.mapper@4.0',
   'android.hardware.graphics.allocator@4.0',
+  'android.hardware.graphics.allocator-V2-ndk',
   'android.hidl.base@1.0',
   'libgralloctypes',
   'libhidlbase',
@@ -491,7 +492,7 @@ endforeach
 libminigbm_gralloc4_utils = library(
   'minigbm_gralloc4_utils',
   'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
-#  'cros_gralloc/String_shim.cpp',
+  'cros_gralloc/String_shim.cpp',
   include_directories : [common_includes, inc_extra,],
   dependencies : [
     common_hidl_deps,
@@ -514,6 +515,8 @@ executable(
   link_with : [libminigbm_gralloc,],
   include_directories : [common_includes, inc_extra],
   dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc', required : false) ],
+  cpp_args: common_cflags,
+  c_args: common_cflags,
   link_args: [common_link_args, nosym_link_args],
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
