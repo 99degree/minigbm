@@ -1,14 +1,47 @@
+[constants]
+# Path to your Android NDK root
+ndk_root_dir = '/usr/android-ndk-r27d'
+
+# Convenience variables
+NDK     = ndk_root_dir / 'toolchains/llvm/prebuilt/linux-x86_64/bin'
+SDK_VER = '34'  # Android API level
+
+# Override with github var
+#NDK     = '${WORK_DIR}/${NDK_VER}' + '/toolchains/llvm/prebuilt/linux-x86_64/bin'
+
 [binaries]
-ndk = '/usr/android-ndk-r27d' + '/toolchains/llvm/prebuilt/linux-x86_64/bin'
-ar = ndk + '/llvm-ar'
-c = ['ccache', ndk + '/aarch64-linux-android33-clang', '-O3', '-DVK_USE_PLATFORM_ANDROID_KHR', '-fPIC']
-cpp = ['ccache', ndk + '/aarch64-linux-android33-clang++', '-O3', '-DVK_USE_PLATFORM_ANDROID_KHR', '-fPIC', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-static-libstdc++', '--end-no-unused-arguments', '-Wno-c++11-narrowing', '-Wno-array-bounds']
-c_ld = 'lld'
-cpp_ld = 'lld'
-strip = ndk + '/aarch64-linux-android-strip'
-pkg-config = ['env', 'PKG_CONFIG_LIBDIR=.:/tmp/drm-static/lib/pkgconfig', '/usr/bin/pkg-config']
+c         = NDK / ('aarch64-linux-android' + SDK_VER + '-clang')
+cpp       = NDK / ('aarch64-linux-android' + SDK_VER + '-clang++')
+ar        = NDK / 'llvm-ar'
+strip     = NDK / 'aarch64-linux-android-strip'
+pkgconfig = '/usr/bin/pkg-config'
+
 [host_machine]
-system = 'android'
-cpu_family = 'arm'
-cpu = 'armv8'
-endian = 'little'
+system     = 'android'
+cpu_family = 'aarch64'
+cpu        = 'aarch64'
+endian     = 'little'
+
+[properties]
+# Define for meson.build
+ndk_root = ndk_root_dir
+sdk_ver = SDK_VER
+
+# Sysroot for the NDK toolchain
+#sys_root = '${WORK_DIR}/${NDK_VER}' / 'toolchains/llvm/prebuilt/linux-x86_64/sysroot'
+sys_root = ndk_root / 'toolchains/llvm/prebuilt/linux-x86_64/sysroot'
+sysroot = ndk_root / 'toolchains/llvm/prebuilt/linux-x86_64/sysroot'
+
+# Point pkg-config to your cross-built libdrm .pc file
+# Adjust path if libdrm.pc is in a different directory
+pkg_config_libdir = ['/tmp/mesa/lib/pkgconfig']
+
+# Compiler flags for C
+c_args = ['-O3', '-fPIC', '-DVK_USE_PLATFORM_ANDROID_KHR', '-U_FORTIFY_SOURCE']
+
+# Compiler flags for C++
+cpp_args = ['-O3', '-fPIC', '-DVK_USE_PLATFORM_ANDROID_KHR', '-U_FORTIFY_SOURCE', '-fno-exceptions', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables', '-Wno-c++11-narrowing', '-Wno-array-bounds']
+
+# Linker flags
+c_link_args = []
+cpp_link_args = ['-static-libstdc++']
