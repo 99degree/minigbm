@@ -466,6 +466,8 @@ endif
 
 set_variable('gbm_deps', libminigbm_gralloc_msm)
 
+if false
+
 # --- File groups ---
 minigbm_gralloc4_allocator_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4Allocator.cc',
@@ -525,10 +527,10 @@ libminigbm_gralloc4_utils = library(
 	common_link_args,
 	nosym_link_args,
   ],
+  build_by_default: false,
   install : true
 )
 
-if false
 # --- Allocator defaults ---
 #allocator_defaults_deps = common_deps + [
 #  dependency('android.hardware.graphics.allocator@4.0', required : true),
@@ -549,6 +551,7 @@ executable(
   c_args: common_cflags,
   link_args: [common_link_args, nosym_link_args],
   install : true,
+  build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
 
@@ -562,10 +565,9 @@ executable(
   link_args: [
 	common_link_args,
 	nosym_link_args,
-	'-landroid.hardware.graphics.allocator@4.0',
-	'-landroid.hidl.base@1.0',
   ],
   install : true,
+  build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
 endif
@@ -583,6 +585,7 @@ executable(
   ],
   link_args: common_link_args,
   install : true,
+  build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
 )
 endif
@@ -601,6 +604,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     ],
     link_args: common_link_args,
     install : true,
+    build_by_default: false,
     install_dir : join_paths(get_option('libexecdir'), 'hw')
   )
 endif
@@ -618,6 +622,7 @@ shared_lib_mapper_minigbm = library(
   link_with : libminigbm_gralloc,
   link_args : [common_link_args, nosym_link_args],
   name_prefix : '',
+  build_by_default: false,
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -641,6 +646,7 @@ shared_lib_mapper_msm = library(
 	'-landroid.hardware.graphics.mapper@4.0',
   ],
   name_prefix : '',
+  build_by_default: false,
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -660,6 +666,7 @@ shared_lib_mapper_arcvm = library(
   link_args : common_link_args,
   name_prefix : '',
   install : true,
+  build_by_default: false,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
 endif
@@ -677,11 +684,12 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     link_with : libminigbm_gralloc_intel,
     link_args : common_link_args,
     name_prefix : '',
+    build_by_default: false,
     install : true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
 endif
-endif
+
 # --- Install VINTF fragments and init_rc files ---
 install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0.xml',
   install_dir : join_paths(get_option('datadir'), 'vintf')
@@ -757,7 +765,6 @@ srcs = files(
   'cros_gralloc/aidl/AllocationResult.cpp',
 )
 
-if true
 # Below are missing:
 #  aidl::android::hardware::graphics::allocator::BnAllocator
 #  convertToCrosDescriptor()
@@ -783,6 +790,7 @@ executable(
 #	'-landroid.hardware.graphics.allocator-V2-ndk',
   ],
 # + ['-Wl,--unresolved-symbols=ignore-all'],
+  build_by_default: false,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
   #install_dir : join_paths(get_option('libdir'), 'hw')
