@@ -5,7 +5,8 @@
 
 project('minigbm', ['c', 'cpp'],
   version: '1.1.0',
-  default_options: ['c_std=c99', 'cpp_std=c++20', 'warning_level=2']
+  default_options: ['c_std=c99', 'cpp_std=c++20', 'warning_level=2'],
+  meson_version: '>=1.8.0',
 )
 
 cc = meson.get_compiler('c')
@@ -36,39 +37,7 @@ if ndk_root == ''
   error('You must set ndk_root either in the cross file or with -Dndk_root=...')
 endif
 
-# Usually mapper5 stable-c only available for v34
-sdk_ver = meson.get_external_property('sdk_ver', '')
-message('sdk_ver: ' + sdk_ver)
-
-if sdk_ver == ''
-  sdk_ver = meson.get_external_property('SDK_VER', '')
-  message('sdk_ver: ' + sdk_ver)
-endif
-
-if sdk_ver == ''
-  sdk_ver = get_option('sdk_ver')
-  message('sdk_ver: ' + sdk_ver)
-endif
-
-if sdk_ver == ''
-  sdk_ver = get_option('SDK_VER')
-  message('sdk_ver: ' + sdk_ver)
-endif
-
-if sdk_ver == '' 
-    error('You must set SDK_VER/sdk_ver either in the cross file or with -Dsdk_ver=... OR -Dsdk_VER=...')
-endif
-
 # For Same Process like mapper
-
-# Supposed vndk is checkout at below
-#./usr/android-ndk-r27d/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/27/libz.so
-#./usr/android-ndk-r27d/prebuilt/vndk/v30/x86_64/arch-x86_64/shared/vndk-core/android.hardware.graphics.allocator@4.0.so
-vndk_sp = join_paths(ndk_root,'prebuilt/vndk/', 'v' + sdk_ver, cpu_name, inst_name,'shared/vndk-sp/')
-message('vndk_sp: ' + vndk_sp)
-
-vndk_llndk_stub = join_paths(ndk_root,'prebuilt/vndk/', 'v' + sdk_ver, cpu_name, inst_name,'shared/llndk-stub/')
-vndk_core = join_paths(ndk_root,'prebuilt/vndk/', 'v' + sdk_ver, cpu_name, inst_name,'shared/vndk-core/')
 
 # Define all available drivers in one place
 _all_drivers = [
@@ -141,13 +110,12 @@ inc_extra_v34 = include_directories(
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/generated-headers/hardware/interfaces/graphics/common/aidl/android.hardware.graphics.common-V4-ndk-source/gen/include/'),
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhidl/transport/include/'),
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/frameworks/native/libs/binder/include/'),
-
   # framework and libhwbinder both have IBinder.h
   join_paths(ndk_root, 'prebuilt/vndk/v34/arm64/include/system/libhwbinder/include/'),
   # local shim includes
   join_paths('.', 'include/stable-c-v34/include'),
   join_paths('.', 'include/stable-c-v34/implutils/include/'),
-  join_paths('.', 'include/')
+  join_paths('.', 'include/'),
 )
 
 if target_machine.system() == 'android'
@@ -161,7 +129,8 @@ common_cflags = [
   '-D_GNU_SOURCE=1',
   '-D_FILE_OFFSET_BITS=64',
   '-Wall', '-Wsign-compare', '-Wpointer-arith', '-Wcast-qual', '-Wcast-align',
-  '-Wno-unused-parameter'
+  '-Wno-unused-parameter',
+  '-Wunused-function',
 ]
 
 generic_cflags = ['-DHAS_DMABUF_SYSTEM_HEAP']
@@ -171,8 +140,7 @@ msm_cflags     = ['-DDRV_MSM', '-DQCOM_DISABLE_COMPRESSED_NV12', '-DHAS_DMABUF_S
 arcvm_cflags   = ['-DVIRTIO_GPU_NEXT']
 
 common_link_args = []
-nosym_link_args = [
-]
+nosym_link_args = []
 #nosym_link_args = ['-Wl,--unresolved-symbols=ignore-all']
 #common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
 
@@ -271,18 +239,12 @@ mapper5_common_source = []
 
 # Only add Mapper5 stable-c API for sdk v34
 # This file depends on Mapper@4.0
-if sdk_ver >= '34'
-  mapper5_common_source = files(
+mapper5_common_source = files(
     'cros_gralloc/mapper_stablec/Mapper.cpp',
-  )
-endif
+)
 
-if sdk_ver == '34'
-  mapper5_common_source = files(
-#    'cros_gralloc/mapper_stablec/Plane.cpp',
-#    'cros_gralloc/String_shim.cpp',
-  )
-endif
+mapper5_common_source = files(
+)
 
 gralloc0_sources = files()  # currently empty
 
@@ -636,7 +598,7 @@ hidl_libs = [
 # Collect deps, skipping missing ones
 common_hidl_deps = []
 foreach name : hidl_libs
-  dep = cc.find_library(name, required: false, dirs: [vndk_llndk_stub, vndk_sp, vndk_core])
+  dep = cc.find_library(name, required: false,)
   if dep.found()
     common_hidl_deps += dep
     message('lib found:' + name)
@@ -650,7 +612,6 @@ endforeach
 libminigbm_gralloc4_utils = library(
   'minigbm_gralloc4_utils',
   'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
-#  'cros_gralloc/String_shim.cpp',
   include_directories : [common_includes, inc_extra,],
   dependencies : [
     common_hidl_deps,

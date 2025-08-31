@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <optional>
+#include <android/hardware/graphics/common/1.2/types.h>
 
 namespace aidl {
 namespace android {
@@ -352,4 +353,80 @@ status_t decodeBufferDescriptorInfo(
 }
 
 } // namespace hardware
+} // namespace android
+
+// Add missing type placeholders if not defined in your branch
+namespace aidl {
+namespace android {
+namespace hardware {
+namespace graphics {
+namespace common {
+    enum class Dataspace : int32_t {};
+    enum class BlendMode : int32_t {};
+} // namespace common
+} // namespace graphics
+} // namespace hardware
+} // namespace android
+} // namespace aidl
+
+namespace android {
+namespace gralloc4 {
+
+// === Additional stubs for missing symbols ===
+
+int encodeBufferDescriptorInfo(
+    const ::android::hardware::graphics::mapper::V4_0::IMapper::BufferDescriptorInfo& /*info*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodePixelFormatRequested(
+    const ::android::hardware::graphics::common::V1_2::PixelFormat& /*fmt*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodePixelFormatFourCC(
+    unsigned int /*fourcc*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodePixelFormatModifier(
+    unsigned long /*modifier*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodeProtectedContent(
+    unsigned long /*prot*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodeDataspace(
+    const ::aidl::android::hardware::graphics::common::Dataspace& /*ds*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int encodeBlendMode(
+    const ::aidl::android::hardware::graphics::common::BlendMode& /*bm*/,
+    ::android::hardware::hidl_vec<uint8_t>* /*out*/) {
+    return 0;
+}
+
+int decodeBlendMode(
+    const ::android::hardware::hidl_vec<uint8_t>& /*in*/,
+    ::aidl::android::hardware::graphics::common::BlendMode* /*out*/) {
+    return 0;
+}
+
+int decodeDataspace(
+    const ::android::hardware::hidl_vec<uint8_t>& /*in*/,
+    ::aidl::android::hardware::graphics::common::Dataspace* /*out*/) {
+    return 0;
+}
+
+} // namespace gralloc4
 } // namespace android
