@@ -118,8 +118,12 @@ inc_extra_v34 = include_directories(
   join_paths('.', 'include/'),
 )
 
+# generally the shared libs are all start with libxxx
+name_prefix = 'lib'
+
 if target_machine.system() == 'android'
   inc_extra = inc_extra_v34
+  name_prefix = ''
 else
   inc_extra = []
 endif
@@ -235,8 +239,6 @@ cros_gralloc_common_sources = files(
   'cros_gralloc/cros_gralloc_helpers.cc',
 )
 
-mapper5_common_source = []
-
 # Only add Mapper5 stable-c API for sdk v34
 # This file depends on Mapper@4.0
 mapper5_common_source = files(
@@ -275,8 +277,10 @@ libminigbm_gralloc_meson = []
 libminigbm_gralloc_msm = []
 libminigbm_gralloc_arcvm = []
 
+
+# this is the compatible layer to libgbm.
 # === libgbm ===
-libgbm = library('gbm',
+libgbm = shared_library('gbm',
   sources: core_sources + libgbm_sources,
   include_directories: [inc, inc_extra],
   c_args: common_cflags,
@@ -286,67 +290,131 @@ libgbm = library('gbm',
   install: true
 )
 
-####### from now on it will add Mapper5 into main lib.
-
+# This is the core + mapper5 shared lib, which is loaded by
+# other module like gralloc5 allocator etc.
+#
+# usually the lib named as minigbm_gralloc_xxx or libminigbm_gralloc_xxx
+#
+# and the pared one should be is the (TODO:) core lib + gralloc for exec bin link-in
+#
 # === Generic gralloc ===
-libminigbm_gralloc = library('minigbm_gralloc',
-  sources: [core_sources, cros_gralloc_common_sources,
-		mapper5_common_source, libminigbm_gralloc_sources,
-                libgbm_sources
+# based package
+lib_minigbm = static_library('minigbm',
+  sources: [
+        gralloc_minigbm_sources,
+        core_sources,
+        libminigbm_gralloc_sources,
+        cros_gralloc_common_sources,
+        libgbm_sources,
   ],
   include_directories: [inc, inc_extra],
-  c_args: common_cflags + generic_cflags,
-  link_args: [common_link_args, nosym_link_args],
-  dependencies: common_deps,
-  name_prefix : '',
-  link_with: stub_libs,
+  dependencies: [common_deps,],
+  link_args: common_link_args,
+  pic: true,
   install: true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
 
-# === Mapper use this dep ===
-libminigbm_gralloc_dep = declare_dependency(
-  link_with : libminigbm_gralloc,
-#  include_directories : inc_minigbm
+# supposed this is for android only.
+libminigbm_gralloc = shared_library('minigbm_gralloc',
+  sources: [
+	mapper5_common_source,
+  ],
+  include_directories: [inc, inc_extra],
+  c_args: common_cflags + generic_cflags,
+  link_args: [common_link_args, nosym_link_args],
+  dependencies: [
+	common_deps,
+#	declare_dependency(link_with: lib_minigbm),	
+  ],
+  link_with: [
+	stub_libs,
+  ],
+  link_whole: [
+	lib_minigbm,
+  ],
+  name_prefix: '',
+  install: true,
+  install_dir : join_paths(get_option('libdir'), 'hw')
 )
 
-gralloc_minigbm = library('gralloc.minigbm',
-  sources: gralloc0_sources + gralloc_minigbm_sources,
+gralloc_minigbm = shared_library('gralloc.minigbm',
+  sources: gralloc0_sources,
   include_directories: [inc, inc_extra],
-  dependencies: [declare_dependency(link_with: libminigbm_gralloc)],
+  dependencies: [
+	common_deps,
+        declare_dependency(link_with: lib_minigbm),
+  ],
+  link_with: [
+        stub_libs,
+  ],
+  link_whole: [
+        lib_minigbm,
+  ],
   link_args: common_link_args,
-  name_prefix : '',
+  name_prefix : name_prefix,
   install: true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
 
 # === Intel gralloc (x86/x86_64 only) ===
 if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
-  libminigbm_gralloc_intel = library('minigbm_gralloc_intel',
+  lib_minigbm_intel = static_library('minigbm_intel',
     sources: [
-		core_sources,
-		libminigbm_gralloc_intel_sources,
-		cros_gralloc_common_sources,
-#		libminigbm_gralloc_intel
-		mapper5_common_source,
-		libgbm_sources,
+        gralloc_minigbm_intel_sources,
+	core_sources,
+	libminigbm_gralloc_intel_sources,
+	cros_gralloc_common_sources,
+	libgbm_sources,
     ],
     include_directories: [inc, inc_extra],
-    c_args: common_cflags + intel_cflags + ['-msse2'],
-    link_args: common_link_args,
     dependencies: common_deps,
-    name_prefix : '',
-    link_with: stub_libs,
+    link_with: [
+	stub_libs,
+    ],
+    link_args: common_link_args,
+    pic: true,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
 
-  gralloc_minigbm_intel = library('gralloc.minigbm_intel',
-    sources: gralloc0_sources + gralloc_minigbm_intel_sources,
+  libminigbm_gralloc_intel = shared_library('minigbm_gralloc_intel',
+    sources: [
+	mapper5_common_source,
+    ],
     include_directories: [inc, inc_extra],
-    dependencies: [declare_dependency(link_with: libminigbm_gralloc_intel)],
+    c_args: common_cflags + intel_cflags + ['-msse2'],
     link_args: common_link_args,
-    name_prefix : '',
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_intel),
+    ],
+    link_with: [
+	stub_libs,
+    ],
+    link_whole: [
+	lib_minigbm_intel,
+    ],
+    name_prefix: '',
+    install: true,
+    install_dir : join_paths(get_option('libdir'), 'hw')
+  )
+
+  gralloc_minigbm_intel = shared_library('gralloc.minigbm_intel',
+    sources: gralloc0_sources,
+    include_directories: [inc, inc_extra],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_intel),
+    ],
+    link_with: [
+        stub_libs,
+    ],
+    link_whole: [
+        lib_minigbm_intel,
+    ],
+    name_prefix : name_prefix,
+    link_args: common_link_args,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -354,31 +422,63 @@ endif
 
 # === Meson gralloc ===
 if 'meson' in drivers
-  libminigbm_gralloc_meson = library('minigbm_gralloc_meson',
+  lib_minigbm_meson = static_library('minigbm_meson',
     sources: [
-                core_sources,
-                libminigbm_gralloc_meson_sources,
-                cros_gralloc_common_sources,
-#                libminigbm_gralloc_meson
-		mapper5_common_source,
-                libgbm_sources
-             ],
+        core_sources,
+        libminigbm_gralloc_meson_sources,
+        cros_gralloc_common_sources,
+        libgbm_sources,
+        gralloc_minigbm_meson_sources,
+    ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + meson_cflags,
     link_args: [common_link_args, nosym_link_args],
     dependencies: common_deps,
-    name_prefix : '',
-    link_with: stub_libs,
+    link_with: [
+        stub_libs,
+    ],
+    pic: true,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
 
-  gralloc_minigbm_meson = library('gralloc.minigbm_meson',
-    sources: gralloc0_sources + gralloc_minigbm_meson_sources,
+  libminigbm_gralloc_meson = shared_library('minigbm_gralloc_meson',
+    sources: [
+	mapper5_common_source,
+    ],
+    include_directories: [inc, inc_extra],
+    c_args: common_cflags + meson_cflags,
+    link_args: [common_link_args, nosym_link_args],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_meson),
+    ],
+    link_with: [
+	stub_libs,
+    ],
+    link_whole: [
+	lib_minigbm_meson,
+    ],
+    name_prefix: '',
+    install: true,
+    install_dir : join_paths(get_option('libdir'), 'hw')
+  )
+
+  lib_gralloc_minigbm_meson = shared_library('gralloc.minigbm_meson',
+    sources: gralloc0_sources,
     include_directories: [inc, inc_extra],
     dependencies: [declare_dependency(link_with: libminigbm_gralloc_meson)],
-    link_args: common_link_args,
-    name_prefix : '',
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_meson),
+    ],
+    link_with: [
+        stub_libs,
+    ],
+    link_whole: [
+        lib_minigbm_meson,
+    ],
+    name_prefix : name_prefix,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -386,31 +486,64 @@ endif
 
 # === MSM gralloc ===
 if 'msm' in drivers
-  libminigbm_gralloc_msm = library('minigbm_gralloc_msm',
+  lib_minigbm_msm = static_library('minigbm_msm',
     sources: [
-                core_sources,
-                libminigbm_gralloc_msm_sources,
-                cros_gralloc_common_sources,
-#                libminigbm_gralloc_msm
-		mapper5_common_source,
-		libgbm_sources
-             ],
+        gralloc_minigbm_msm_sources,
+        libgbm_sources,
+        core_sources,
+        libminigbm_gralloc_msm_sources,
+        cros_gralloc_common_sources,
+    ],
     include_directories: [inc, inc_extra],
-    c_args: common_cflags + msm_cflags,
-    link_args: [common_link_args, nosym_link_args],
     dependencies: common_deps,
-    name_prefix : '',
-    link_with: stub_libs,
+    link_with: [
+	stub_libs,
+    ],
+    link_args: common_link_args,
+    pic: true,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
 
-  gralloc_minigbm_msm = library('gralloc.minigbm_msm',
-    sources: gralloc0_sources + gralloc_minigbm_msm_sources,
+  libminigbm_gralloc_msm = shared_library('minigbm_gralloc_msm',
+    sources: [
+	mapper5_common_source,
+    ],
     include_directories: [inc, inc_extra],
-    dependencies: [declare_dependency(link_with: libminigbm_gralloc_msm)],
-    link_args: common_link_args,
+    c_args: common_cflags + msm_cflags,
+    link_args: [common_link_args, nosym_link_args],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_msm),
+    ],
+    link_with: [
+	stub_libs,
+    ],
+    link_whole: [
+	lib_minigbm_msm,
+    ],
     name_prefix : '',
+    install: true,
+    install_dir : join_paths(get_option('libdir'), 'hw')
+  )
+
+  gralloc_minigbm_msm = shared_library('gralloc.minigbm_msm',
+    sources: [
+	gralloc0_sources,
+    ],
+    include_directories: [inc, inc_extra],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_msm),
+    ],
+    link_with: [
+        stub_libs,
+    ],
+    link_whole: [
+        lib_minigbm_msm,
+    ],
+    link_args: common_link_args,
+    name_prefix : name_prefix,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -421,30 +554,57 @@ endif
 
 # === ARCVM gralloc ===
 if 'arcvm' in drivers
-  libminigbm_gralloc_arcvm = library('minigbm_gralloc_arcvm',
+  lib_minigbm_arcvm = static_library('minigbm_arcvm',
     sources: [
-                core_sources,
-                libminigbm_gralloc_arcvm_sources,
-                cros_gralloc_common_sources,
-#                libminigbm_gralloc_arcvm
-		mapper5_common_source,
-                libgbm_sources
-             ],
+        gralloc_minigbm_arcvm_sources,
+        libgbm_sources,
+        core_sources,
+        libminigbm_gralloc_arcvm_sources,
+        cros_gralloc_common_sources,
+    ],
     include_directories: [inc, inc_extra],
-    c_args: common_cflags + arcvm_cflags,
-    link_args: common_link_args,
-    name_prefix : '',
-    link_with: stub_libs,
     dependencies: common_deps,
+    pic: true,
+    link_args: common_link_args,
     install: true
   )
 
-  gralloc_minigbm_arcvm = library('gralloc.minigbm_arcvm',
-    sources: gralloc0_sources + gralloc_minigbm_arcvm_sources,
+  libminigbm_gralloc_arcvm = shared_library('minigbm_gralloc_arcvm',
+    sources: [
+	mapper5_common_source,
+    ],
     include_directories: [inc, inc_extra],
-    dependencies: [declare_dependency(link_with: libminigbm_gralloc_arcvm)],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_arcvm),
+    ],
+    c_args: common_cflags + arcvm_cflags,
     link_args: common_link_args,
     name_prefix : '',
+    link_with: [
+	stub_libs,
+    ],
+    link_whole: [
+	lib_minigbm_arcvm,
+    ],
+    install: true
+  )
+
+  gralloc_minigbm_arcvm = shared_library('gralloc.minigbm_arcvm',
+    sources: gralloc0_sources,
+    include_directories: [inc, inc_extra],
+    dependencies: [
+          common_deps,
+          declare_dependency(link_with: lib_minigbm_arcvm),
+    ],
+    link_args: common_link_args,
+    link_with: [
+        stub_libs,
+    ],
+    link_whole: [
+        lib_minigbm_arcvm,
+    ],
+    name_prefix : name_prefix,
     install: true
   )
 endif
@@ -549,7 +709,6 @@ link_args : [
   install : false,
 )
 
-
 # --- File groups ---
 minigbm_gralloc4_allocator_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4Allocator.cc',
@@ -607,9 +766,10 @@ foreach name : hidl_libs
   endif
 endforeach  
 
-# Too bad Android 15 no longer have android.hidl.base@0 so hidl cant be built!!
+# usually this can be a shared lib to support gralloc0/1 api
+# but it does not prove to be useful. so make it static lib
 # --- libminigbm_gralloc4_utils ---
-libminigbm_gralloc4_utils = library(
+libminigbm_gralloc4_utils = static_library(
   'minigbm_gralloc4_utils',
   'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
   include_directories : [common_includes, inc_extra,],
@@ -617,20 +777,24 @@ libminigbm_gralloc4_utils = library(
     common_hidl_deps,
     common_deps,
   ],
-  link_with : [libminigbm_gralloc, stub_libs, allocator_stub_libs, mapper_stub_libs],
+# no longer link with other libs
+#  link_with : [libminigbm_gralloc, stub_libs, allocator_stub_libs, mapper_stub_libs],
+  link_with : [stub_libs, allocator_stub_libs, mapper_stub_libs],
   link_args: [
 	common_link_args,
 	nosym_link_args,
   ],
+  pic: true,
   build_by_default: false,
   install : true
 )
 
 ##################
+# mapper@4 usually work as a so lib
+#################
 
-if true
 # --- Mapper shared libraries ---
-shared_lib_mapper_minigbm = library(
+shared_lib_mapper_minigbm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
@@ -640,7 +804,13 @@ shared_lib_mapper_minigbm = library(
 	dependency('libminigbm_gralloc', required : false),
 	aidl_deps,
   ],
-  link_with : [libminigbm_gralloc, stub_libs, allocator_stub_libs, mapper_stub_libs],
+  link_with : [
+	lib_minigbm,
+	libminigbm_gralloc,
+	stub_libs,
+	allocator_stub_libs,
+	mapper_stub_libs
+  ],
   link_args : [common_link_args, nosym_link_args],
   name_prefix : '',
   build_by_default: false,
@@ -649,7 +819,7 @@ shared_lib_mapper_minigbm = library(
 )
 
 if 'msm' in drivers
-shared_lib_mapper_minigbm_msm = library(
+shared_lib_mapper_minigbm_msm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_msm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
@@ -658,7 +828,13 @@ shared_lib_mapper_minigbm_msm = library(
 	common_hidl_deps,
 	dependency('libminigbm_gralloc_msm', required : false),
    ],
-  link_with : [libminigbm_gralloc_msm, stub_libs, allocator_stub_libs, mapper_stub_libs],
+  link_with : [
+	lib_minigbm_msm,
+	libminigbm_gralloc_msm,
+	stub_libs,
+	allocator_stub_libs,
+	mapper_stub_libs
+  ],
   link_args: [
         common_link_args,
         nosym_link_args,
@@ -671,7 +847,7 @@ shared_lib_mapper_minigbm_msm = library(
 endif
 
 if 'arcvm' in drivers
-shared_lib_mapper_minigbm_arcvm = library(
+shared_lib_mapper_minigbm_arcvm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_arcvm',
   minigbm_gralloc4_mapper_files,
   include_directories : [common_includes, inc_extra],
@@ -680,7 +856,12 @@ shared_lib_mapper_minigbm_arcvm = library(
 	common_hidl_deps,
 	dependency('libminigbm_gralloc_arcvm', required : false),
   ],
-  link_with : [libminigbm_gralloc_arcvm, allocator_stub_libs, mapper_stub_libs],
+  link_with : [
+	lib_minigbm_arcvm,
+	libminigbm_gralloc_arcvm,
+	allocator_stub_libs,
+	mapper_stub_libs
+  ],
   link_args : common_link_args,
   name_prefix : '',
   install : true,
@@ -690,7 +871,7 @@ shared_lib_mapper_minigbm_arcvm = library(
 endif
 
 if host_machine.cpu_family() in ['x86', 'x86_64']
-  shared_lib_mapper_minigbm_intel = library(
+  shared_lib_mapper_minigbm_intel = shared_library(
     'android.hardware.graphics.mapper@4.0-impl.minigbm_intel',
     minigbm_gralloc4_mapper_files,
     include_directories : [common_includes, inc_extra],
@@ -699,7 +880,13 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 	common_hidl_deps,
 	dependency('libminigbm_gralloc_intel', required : false),
     ],
-    link_with : [libminigbm_gralloc_intel, stub_libs, allocator_stub_libs, mapper_stub_libs],
+    link_with : [
+	lib_minigbm_intel,
+	libminigbm_gralloc_intel,
+	stub_libs,
+	allocator_stub_libs,
+	mapper_stub_libs
+    ],
     link_args : common_link_args,
     name_prefix : '',
     build_by_default: false,
@@ -722,7 +909,7 @@ executable(
 	aidl_srcs,
   ],
   link_with : [
-	libminigbm_gralloc,
+	lib_minigbm,
 	libminigbm_gralloc4_utils,
 	stub_libs,
 	allocator_stub_libs,
@@ -752,7 +939,7 @@ executable(
 	aidl_srcs,
   ],
   link_with : [
-	libminigbm_gralloc_msm,
+	lib_minigbm_msm,
 	libminigbm_gralloc4_utils,
 	stub_libs,
 	allocator_stub_libs,
@@ -777,7 +964,7 @@ executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm_arcvm',
   minigbm_gralloc4_allocator_files,
   link_with : [
-	libminigbm_gralloc_arcvm,
+	lib_minigbm_arcvm,
 	libminigbm_gralloc4_utils,
 	# link all together as allocator
 	shared_lib_mapper_minigbm_arcvm,
@@ -801,7 +988,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     'android.hardware.graphics.allocator@4.0-service.minigbm_intel',
     minigbm_gralloc4_allocator_files,
     link_with : [
-		libminigbm_gralloc_intel,
+		lib_minigbm_intel,
 		libminigbm_gralloc4_utils,
 		# link all together as allocator
 		shared_lib_mapper_minigbm_intel,
@@ -870,22 +1057,58 @@ srcs = files(
 # Binary target
 executable(
   'android.hardware.graphics.allocator-service.minigbm',
-  aidl_srcs,
-  srcs,
+  [aidl_srcs, srcs],
   include_directories : [inc_extra,],
-  link_with : [libminigbm_gralloc4_utils, stub_libs],
+  link_with : [
+	lib_minigbm,
+	libminigbm_gralloc4_utils,
+	stub_libs,
+	libminigbm_gralloc,
+  ],
 # suppose all libdrm symbols are gone through minigbm and libminigbm_gralloc4_utils will
 # link with minigbm statically.
   dependencies : [
 	common_deps,
 	aidl_deps,
-	libminigbm_gralloc_dep,
+	declare_dependency(  link_with : libminigbm_gralloc,),
 	libdrm_dep,
   ],
   link_args: [
 	common_link_args, 
 	nosym_link_args,
 #	'-landroid.hardware.graphics.allocator-V2-ndk',
+  ],
+# + ['-Wl,--unresolved-symbols=ignore-all'],
+  build_by_default: false,
+  install : true,
+  install_dir : join_paths(get_option('libexecdir'), 'hw')
+  #install_dir : join_paths(get_option('libdir'), 'hw')
+)
+
+if 'msm' in drivers
+executable(
+  'android.hardware.graphics.allocator-service.minigbm_msm',
+  [aidl_srcs, srcs],
+  include_directories : [inc_extra,],
+  link_with : [libminigbm_gralloc4_utils, stub_libs],
+# suppose all libdrm symbols are gone through minigbm and libminigbm_gralloc4_utils will
+# link with minigbm statically.
+  dependencies : [
+        common_deps,
+        aidl_deps,
+        declare_dependency(  link_with : libminigbm_gralloc,),
+        libdrm_dep,
+  ],
+  link_with : [
+	lib_minigbm_msm,
+	libminigbm_gralloc4_utils,
+	stub_libs,
+	libminigbm_gralloc_msm,
+  ],
+  link_args: [
+        common_link_args,
+        nosym_link_args,
+#       '-landroid.hardware.graphics.allocator-V2-ndk',
   ],
 # + ['-Wl,--unresolved-symbols=ignore-all'],
   build_by_default: false,
