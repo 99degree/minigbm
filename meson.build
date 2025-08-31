@@ -154,7 +154,7 @@ stub_libs = []
 lib_names = [
 	'cutils', 'hardware', 'log', 'base', 
 	'nativewindow', 'sync', 'binder_ndk', 'utils', 'hidlbase',
-	'hidltransport', 'gralloctype'
+	'hidltransport', 'gralloctypes'
 ]
 
 #  if with_libbacktrace
@@ -1007,6 +1007,18 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 endif
 
 # --- Install VINTF fragments and init_rc files ---
+install_data('cros_gralloc/aidl/allocator.xml',
+  install_dir : join_paths(get_option('datadir'), 'vintf')
+)
+
+install_data('cros_gralloc/mapper_stablec/mapper.minigbm.xml',
+  install_dir : join_paths(get_option('datadir'), 'vintf')
+)
+
+install_data('cros_gralloc/aidl/allocator.rc',
+  install_dir : join_paths(get_option('sysconfdir'), 'init')
+)
+
 install_data('cros_gralloc/gralloc4/android.hardware.graphics.allocator@4.0.xml',
   install_dir : join_paths(get_option('datadir'), 'vintf')
 )
