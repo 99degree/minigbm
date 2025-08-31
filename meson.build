@@ -137,6 +137,37 @@ common_cflags = [
   '-Wunused-function',
 ]
 
+common_cppflags = [
+#  '-D__ANDROID_API__=34',
+  '-D__ANDROID__',
+  '-stdlib=libc++',
+  '-O0', '-g',
+#  '-fPIC',
+  '-fvisibility=default',
+#  '-fno-inline',
+  '-fexceptions',
+  '-frtti',
+  '-Wno-unused-parameter'
+]
+
+common_cflags += [
+#  '-D__ANDROID_API__=34',
+  '-D__ANDROID__',
+  '-O0', '-g',
+#  '-fPIC',
+  '-fvisibility=default',
+  '-Wno-unused-parameter'
+]
+
+common_link_args = [
+  '-Wl,--no-gc-sections',
+#  '-Wl,-soname,libhidlbase.so', # or the actual SONAME you’re stubbing
+  '-shared',
+#  '-nostdlib++',
+  '-llog',
+  '-lc'
+]
+
 generic_cflags = ['-DHAS_DMABUF_SYSTEM_HEAP']
 intel_cflags   = ['-DDRV_I915', '-DDRV_XE']
 meson_cflags   = ['-DDRV_MESON']
@@ -166,36 +197,9 @@ lib_names = [
       lib,
       files('android_stub/' + lib + '_stub.cpp'),
       include_directories : inc_extra,
-cpp_args : [
-  '-D__ANDROID__',
-  '-stdlib=libc++',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-fno-inline',
-  '-fexceptions',
-  '-frtti',
-  '-Wno-unused-parameter'
-],
-
-c_args : [
-  '-D__ANDROID__',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-Wno-unused-parameter'
-],
-
-link_args : [
-  '-Wl,--no-gc-sections',
-#  '-Wl,-soname,libhidlbase.so', # or the actual SONAME you’re stubbing
-  '-shared',
-#  '-nostdlib++',
-  '-llog',
-  '-lc'
-],
-
-
+      c_args: common_cflags,
+      cpp_args: common_cppflags,
+      link_args: common_link_args,
       install : false,
     )
   base_deps = declare_dependency(
@@ -284,7 +288,8 @@ libgbm = shared_library('gbm',
   sources: core_sources + libgbm_sources,
   include_directories: [inc, inc_extra],
   c_args: common_cflags,
-  link_args: [common_link_args, nosym_link_args],
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   dependencies: [common_deps],
   link_with: stub_libs,
   install: true
@@ -309,6 +314,8 @@ lib_minigbm = static_library('minigbm',
   ],
   include_directories: [inc, inc_extra],
   dependencies: [common_deps,],
+  c_args : common_cflags,
+  cpp_args : common_cppflags,
   link_args: common_link_args,
   pic: true,
   install: true,
@@ -322,11 +329,12 @@ libminigbm_gralloc = shared_library('minigbm_gralloc',
   ],
   include_directories: [inc, inc_extra],
   c_args: common_cflags + generic_cflags,
-  link_args: [common_link_args, nosym_link_args],
+  cpp_args: common_cppflags,
   dependencies: [
 	common_deps,
 #	declare_dependency(link_with: lib_minigbm),	
   ],
+  link_args: common_link_args,
   link_with: [
 	stub_libs,
   ],
@@ -345,13 +353,15 @@ gralloc_minigbm = shared_library('gralloc.minigbm',
 	common_deps,
         declare_dependency(link_with: lib_minigbm),
   ],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   link_with: [
         stub_libs,
   ],
   link_whole: [
         lib_minigbm,
   ],
-  link_args: common_link_args,
   name_prefix : name_prefix,
   install: true,
   install_dir : join_paths(get_option('libdir'), 'hw')
@@ -369,10 +379,12 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
     ],
     include_directories: [inc, inc_extra],
     dependencies: common_deps,
+    c_args: common_cflags + intel_cflags + ['-msse2'],
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
 	stub_libs,
     ],
-    link_args: common_link_args,
     pic: true,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
@@ -384,6 +396,7 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
     ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + intel_cflags + ['-msse2'],
+    cpp_args: common_cppflags,
     link_args: common_link_args,
     dependencies: [
           common_deps,
@@ -407,6 +420,9 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
           common_deps,
           declare_dependency(link_with: lib_minigbm_intel),
     ],
+    c_args: common_cflags + intel_cflags + ['-msse2'],
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
         stub_libs,
     ],
@@ -414,7 +430,6 @@ if 'intel' in drivers and cpu_family in ['x86', 'x86_64']
         lib_minigbm_intel,
     ],
     name_prefix : name_prefix,
-    link_args: common_link_args,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
   )
@@ -432,7 +447,8 @@ if 'meson' in drivers
     ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + meson_cflags,
-    link_args: [common_link_args, nosym_link_args],
+    cpp_args: common_cppflags,
+    link_args: [common_link_args],
     dependencies: common_deps,
     link_with: [
         stub_libs,
@@ -447,12 +463,13 @@ if 'meson' in drivers
 	mapper5_common_source,
     ],
     include_directories: [inc, inc_extra],
-    c_args: common_cflags + meson_cflags,
-    link_args: [common_link_args, nosym_link_args],
     dependencies: [
           common_deps,
           declare_dependency(link_with: lib_minigbm_meson),
     ],
+    c_args: common_cflags + meson_cflags,
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
 	stub_libs,
     ],
@@ -467,11 +484,14 @@ if 'meson' in drivers
   lib_gralloc_minigbm_meson = shared_library('gralloc.minigbm_meson',
     sources: gralloc0_sources,
     include_directories: [inc, inc_extra],
-    dependencies: [declare_dependency(link_with: libminigbm_gralloc_meson)],
+#    dependencies: [declare_dependency(link_with: libminigbm_gralloc_meson)],
     dependencies: [
           common_deps,
           declare_dependency(link_with: lib_minigbm_meson),
     ],
+    c_args: common_cflags + meson_cflags,
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
         stub_libs,
     ],
@@ -496,10 +516,12 @@ if 'msm' in drivers
     ],
     include_directories: [inc, inc_extra],
     dependencies: common_deps,
+    c_args: common_cflags + msm_cflags,
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
 	stub_libs,
     ],
-    link_args: common_link_args,
     pic: true,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
@@ -511,7 +533,8 @@ if 'msm' in drivers
     ],
     include_directories: [inc, inc_extra],
     c_args: common_cflags + msm_cflags,
-    link_args: [common_link_args, nosym_link_args],
+    cpp_args: common_cppflags + msm_cflags,
+    link_args: common_link_args,
     dependencies: [
           common_deps,
           declare_dependency(link_with: lib_minigbm_msm),
@@ -536,13 +559,15 @@ if 'msm' in drivers
           common_deps,
           declare_dependency(link_with: lib_minigbm_msm),
     ],
+    c_args: common_cflags + msm_cflags,
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     link_with: [
         stub_libs,
     ],
     link_whole: [
         lib_minigbm_msm,
     ],
-    link_args: common_link_args,
     name_prefix : name_prefix,
     install: true,
     install_dir : join_paths(get_option('libdir'), 'hw')
@@ -565,6 +590,8 @@ if 'arcvm' in drivers
     include_directories: [inc, inc_extra],
     dependencies: common_deps,
     pic: true,
+    c_args: common_cflags + arcvm_cflags,
+    cpp_args: common_cppflags,
     link_args: common_link_args,
     install: true
   )
@@ -579,6 +606,7 @@ if 'arcvm' in drivers
           declare_dependency(link_with: lib_minigbm_arcvm),
     ],
     c_args: common_cflags + arcvm_cflags,
+    cpp_args: common_cppflags,
     link_args: common_link_args,
     name_prefix : '',
     link_with: [
@@ -597,6 +625,8 @@ if 'arcvm' in drivers
           common_deps,
           declare_dependency(link_with: lib_minigbm_arcvm),
     ],
+    c_args: common_cflags + arcvm_cflags,
+    cpp_args: common_cppflags,
     link_args: common_link_args,
     link_with: [
         stub_libs,
@@ -637,33 +667,9 @@ allocator_stub_libs = shared_library(
    'android_stub/allocator@4.0_stub.cpp',
   ),
   include_directories : inc_extra,
-cpp_args : [                          
-  '-D__ANDROID__',
-  '-stdlib=libc++',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-fno-inline',
-  '-fexceptions',
-  '-frtti',
-  '-Wno-unused-parameter'
-],
-c_args : [
-  '-D__ANDROID__',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-Wno-unused-parameter'
-],
-
-link_args : [
-  '-Wl,--no-gc-sections',
-#  '-Wl,-soname,libhidlbase.so', # or the actual SONAME you’re stubbing
-  '-shared',
-#  '-nostdlib++',
-  '-llog',
-  '-lc'
-],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   link_with : [stub_libs],
   name_prefix: '',
   install : false,
@@ -675,35 +681,9 @@ mapper_stub_libs = shared_library(
    'android_stub/mapper@4.0_stub.cpp' 
   ),
   include_directories : inc_extra,
-cpp_args : [                          
-  '-D__ANDROID__',
-  '-stdlib=libc++',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-fno-inline',
-  '-fexceptions',
-  '-frtti',
-  '-Wno-unused-parameter',
-  '-Wno-inconsistent-missing-override',
-],
-c_args : [
-  '-D__ANDROID__',
-  '-O0', '-g',
-  '-fPIC',
-  '-fvisibility=default',
-  '-Wno-unused-parameter',
-],
-
-link_args : [
-  '-Wl,--no-gc-sections',
-#  '-Wl,-soname,libhidlbase.so', # or the actual SONAME you’re stubbing
-  '-shared',
-#  '-nostdlib++',
-  '-llog',
-  '-lc',
-  '-lc++_shared'
-],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   link_with : [stub_libs],
   name_prefix : '',
   install : false,
@@ -777,13 +757,10 @@ libminigbm_gralloc4_utils = static_library(
     common_hidl_deps,
     common_deps,
   ],
-# no longer link with other libs
-#  link_with : [libminigbm_gralloc, stub_libs, allocator_stub_libs, mapper_stub_libs],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   link_with : [stub_libs, allocator_stub_libs, mapper_stub_libs],
-  link_args: [
-	common_link_args,
-	nosym_link_args,
-  ],
   pic: true,
   build_by_default: false,
   install : true
@@ -811,7 +788,9 @@ shared_lib_mapper_minigbm = shared_library(
 	allocator_stub_libs,
 	mapper_stub_libs
   ],
-  link_args : [common_link_args, nosym_link_args],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   name_prefix : '',
   build_by_default: false,
   install : true,
@@ -827,17 +806,16 @@ shared_lib_mapper_minigbm_msm = shared_library(
 	common_deps,
 	common_hidl_deps,
 	dependency('libminigbm_gralloc_msm', required : false),
-   ],
+  ],
+  c_args: common_cflags + msm_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   link_with : [
 	lib_minigbm_msm,
 	libminigbm_gralloc_msm,
 	stub_libs,
 	allocator_stub_libs,
 	mapper_stub_libs
-  ],
-  link_args: [
-        common_link_args,
-        nosym_link_args,
   ],
   name_prefix : '',
   build_by_default: false,
@@ -862,7 +840,9 @@ shared_lib_mapper_minigbm_arcvm = shared_library(
 	allocator_stub_libs,
 	mapper_stub_libs
   ],
-  link_args : common_link_args,
+  c_args: common_cflags + arcvm_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   name_prefix : '',
   install : true,
   build_by_default: false,
@@ -887,7 +867,9 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 	allocator_stub_libs,
 	mapper_stub_libs
     ],
-    link_args : common_link_args,
+    c_args: common_cflags + intel_cflags,
+    cpp_args: common_cppflags,
+    link_args: common_link_args,
     name_prefix : '',
     build_by_default: false,
     install : true,
@@ -925,7 +907,7 @@ executable(
   ],
   cpp_args: common_cflags,
   c_args: common_cflags,
-  link_args: [common_link_args, nosym_link_args],
+  link_args: common_link_args,
   install : true,
   build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -949,10 +931,9 @@ executable(
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
-  link_args: [
-	common_link_args,
-	nosym_link_args,
-  ],
+  c_args: common_cflags + msm_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   install : true,
   build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -975,6 +956,8 @@ executable(
 	common_hidl_deps,
 	dependency('libminigbm_gralloc_arcvm', required : false),
   ],
+  c_args: common_cflags + arcvm_cflags,
+  cpp_args: common_cppflags,
   link_args: common_link_args,
   install : true,
   build_by_default: false,
@@ -999,6 +982,8 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 		common_hidl_deps,
 		dependency('libminigbm_gralloc_intel', required : false),
     ],
+    c_args: common_cflags + intel_cflags,
+    cpp_args: common_cppflags,
     link_args: common_link_args,
     install : true,
     build_by_default: false,
@@ -1085,12 +1070,9 @@ executable(
 	declare_dependency(  link_with : libminigbm_gralloc,),
 	libdrm_dep,
   ],
-  link_args: [
-	common_link_args, 
-	nosym_link_args,
-#	'-landroid.hardware.graphics.allocator-V2-ndk',
-  ],
-# + ['-Wl,--unresolved-symbols=ignore-all'],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   build_by_default: false,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -1102,7 +1084,6 @@ executable(
   'android.hardware.graphics.allocator-service.minigbm_msm',
   [aidl_srcs, srcs],
   include_directories : [inc_extra,],
-  link_with : [libminigbm_gralloc4_utils, stub_libs],
 # suppose all libdrm symbols are gone through minigbm and libminigbm_gralloc4_utils will
 # link with minigbm statically.
   dependencies : [
@@ -1117,12 +1098,9 @@ executable(
 	stub_libs,
 	libminigbm_gralloc_msm,
   ],
-  link_args: [
-        common_link_args,
-        nosym_link_args,
-#       '-landroid.hardware.graphics.allocator-V2-ndk',
-  ],
-# + ['-Wl,--unresolved-symbols=ignore-all'],
+  c_args: common_cflags,
+  cpp_args: common_cppflags,
+  link_args: common_link_args,
   build_by_default: false,
   install : true,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
