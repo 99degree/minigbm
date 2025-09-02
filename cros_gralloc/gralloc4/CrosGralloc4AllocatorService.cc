@@ -33,3 +33,8 @@ int main(int, char**) {
     ALOGI("IAllocator 4.0 service is terminating.");
     return 0;
 }
+
+extern "C" {
+    const std::type_info* _ZTIN7android8hardware8graphics9allocator4V4_010IAllocatorE =
+        &typeid(::android::hardware::graphics::allocator::V4_0::IAllocator);
+}

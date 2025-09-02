@@ -3,6 +3,7 @@
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
+#include <typeinfo>
 
 #include "cros_gralloc/gralloc4/CrosGralloc4Allocator.h"
 
@@ -25,11 +26,37 @@ using android::hardware::graphics::mapper::V4_0::Error;
 using BufferDescriptorInfo =
         android::hardware::graphics::mapper::V4_0::IMapper::BufferDescriptorInfo;
 
+static const std::type_info& _force_typeinfo_IAllocator
+    __attribute__((used)) =
+    typeid(::android::hardware::graphics::allocator::V4_0::IAllocator);
+
+void ensure_IAllocator_RTTI() {
+    // This line is the "force reference"
+    (void)_force_typeinfo_IAllocator;
+}
+
+::android::hardware::Return<void> interfaceChain(
+    std::function<void(const ::android::hardware::hidl_vec<::android::hardware::hidl_string>&)> _hidl_cb) {
+    // Minimal implementation: return just the interface descriptor
+    ::android::hardware::hidl_vec<::android::hardware::hidl_string> descriptors;
+    descriptors.resize(1);
+    descriptors[0] = descriptor; // usually from generated code
+    _hidl_cb(descriptors);
+    return ::android::hardware::Void();
+}
+
 Error CrosGralloc4Allocator::init() {
     mDriver = cros_gralloc_driver::get_instance();
     return mDriver ? Error::NONE : Error::NO_RESOURCES;
 }
-
+#if 0
+Return<void> CrosGralloc4Allocator::getDebugInfo(getDebugInfo_cb _hidl_cb) {
+    // Fill in with whatever debug info you want to return
+    android::hidl::base::V1_0::DebugInfo info = {};
+    _hidl_cb(info);
+    return Void();
+}
+#endif
 Error CrosGralloc4Allocator::allocate(const BufferDescriptorInfo& descriptor, uint32_t* outStride,
                                       hidl_handle* outHandle) {
     if (!mDriver) {
