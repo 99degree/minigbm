@@ -9,7 +9,6 @@
 
 #include <aidl/android/hardware/graphics/allocator/AllocationResult.h>
 #include <aidl/android/hardware/graphics/allocator/BnAllocator.h>
-#include <android/hardware/graphics/mapper/4.0/IMapper.h>
 
 #include "cros_gralloc/cros_gralloc_driver.h"
 #include "cros_gralloc/cros_gralloc_helpers.h"
