@@ -109,6 +109,17 @@ static const struct backend *drv_get_backend(int fd)
 			drmFreeVersion(drm_version);
 			return b;
 		}
+
+		/* to fallback support for drm device name like [msm, msm_drm] */
+		if (strncmp(drm_version->name, b->name, strlen(drm_version->name))) {
+			drmFreeVersion(drm_version);
+			return b;
+		}
+
+		if (strncmp(drm_version->name, b->name, strlen(b->name))) {
+			drmFreeVersion(drm_version);
+			return b;
+		}
 	}
 
 	drmFreeVersion(drm_version);

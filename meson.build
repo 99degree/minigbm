@@ -222,7 +222,7 @@ stub_libs = []
 lib_names = [
 	'cutils', 'hardware', 'log', 'base', 
 	'nativewindow', 'sync', 'binder_ndk', 'utils',
-	'hidltransport', 'c++_shared',
+	'hidltransport', 'c++_shared', 'gralloctypes', 'hidlbase',
 ]
 
 #  if with_libbacktrace
@@ -742,13 +742,17 @@ mapper_stub_libs = shared_library(
 minigbm_gralloc4_allocator_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4Allocator.cc',
   'cros_gralloc/gralloc4/CrosGralloc4AllocatorService.cc',
-  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
-  'property_get_shim.c'
+#  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+#  'property_get_shim.c'
 )
 
 minigbm_gralloc4_mapper_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4Mapper.cc',
-  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+#  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
+)
+
+minigbm_gralloc4_utils_files = files(
+ 'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
 )
 
 aidl_srcs = files(
@@ -818,11 +822,12 @@ libminigbm_gralloc4_utils = static_library(
 ##################
 # mapper@4 usually work as a so lib
 #################
-if false
+#if false
+if true
 # --- Mapper shared libraries ---
 shared_lib_mapper_minigbm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm',
-  minigbm_gralloc4_mapper_files,
+  [minigbm_gralloc4_mapper_files, minigbm_gralloc4_utils_files],
   include_directories : [common_includes, inc_extra],
   dependencies : [
 	common_deps,
@@ -831,8 +836,8 @@ shared_lib_mapper_minigbm = shared_library(
 	aidl_deps,
   ],
   link_with : [
-	lib_minigbm,
-	libminigbm_gralloc,
+#	lib_minigbm,
+#	libminigbm_gralloc,
 	stub_libs,
 	allocator_stub_libs,
 	mapper_stub_libs
@@ -842,7 +847,10 @@ shared_lib_mapper_minigbm = shared_library(
   link_args: common_link_args,
   name_prefix : '',
   build_by_default: false,
-  #pic: true,
+  link_whole: [
+        lib_minigbm,
+#        libminigbm_gralloc4_utils,
+  ],
   install : true,
   install_dir : join_paths(get_option('libdir'), 'hw')
 )
@@ -850,7 +858,7 @@ shared_lib_mapper_minigbm = shared_library(
 if 'msm' in drivers
 shared_lib_mapper_minigbm_msm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_msm',
-  minigbm_gralloc4_mapper_files,
+  [minigbm_gralloc4_mapper_files, minigbm_gralloc4_utils_files],
   include_directories : [common_includes, inc_extra],
   dependencies : [
 	common_deps,
@@ -861,13 +869,16 @@ shared_lib_mapper_minigbm_msm = shared_library(
   cpp_args: common_cppflags,
   link_args: common_link_args,
   link_with : [
-	lib_minigbm_msm,
-	libminigbm_gralloc_msm,
+#	lib_minigbm_msm,
+#	libminigbm_gralloc_msm,
 	stub_libs,
-	allocator_stub_libs,
+#	allocator_stub_libs,
 	mapper_stub_libs
   ],
-  #pic: true,
+  link_whole: [
+        lib_minigbm_msm,
+#       libminigbm_gralloc4_utils,
+  ],
   name_prefix : '',
   build_by_default: false,
   install : true,
@@ -878,7 +889,7 @@ endif
 if 'arcvm' in drivers
 shared_lib_mapper_minigbm_arcvm = shared_library(
   'android.hardware.graphics.mapper@4.0-impl.minigbm_arcvm',
-  minigbm_gralloc4_mapper_files,
+  [minigbm_gralloc4_mapper_files, minigbm_gralloc4_utils_files],
   include_directories : [common_includes, inc_extra],
   dependencies : [
 	common_deps,
@@ -886,15 +897,18 @@ shared_lib_mapper_minigbm_arcvm = shared_library(
 	dependency('libminigbm_gralloc_arcvm', required : false),
   ],
   link_with : [
-	lib_minigbm_arcvm,
-	libminigbm_gralloc_arcvm,
+#	lib_minigbm_arcvm,
+#	libminigbm_gralloc_arcvm,
 	allocator_stub_libs,
 	mapper_stub_libs
   ],
   c_args: common_cflags + arcvm_cflags,
   cpp_args: common_cppflags,
   link_args: common_link_args,
-  #pic: true,
+  link_whole: [
+        lib_minigbm_arcvm,
+#        libminigbm_gralloc4_utils,
+  ],
   name_prefix : '',
   install : true,
   build_by_default: false,
@@ -905,7 +919,7 @@ endif
 if host_machine.cpu_family() in ['x86', 'x86_64']
   shared_lib_mapper_minigbm_intel = shared_library(
     'android.hardware.graphics.mapper@4.0-impl.minigbm_intel',
-    minigbm_gralloc4_mapper_files,
+  [minigbm_gralloc4_mapper_files, minigbm_gralloc4_utils_files],
     include_directories : [common_includes, inc_extra],
     dependencies : [
 	common_deps,
@@ -913,8 +927,8 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 	dependency('libminigbm_gralloc_intel', required : false),
     ],
     link_with : [
-	lib_minigbm_intel,
-	libminigbm_gralloc_intel,
+#	lib_minigbm_intel,
+#	libminigbm_gralloc_intel,
 	stub_libs,
 	allocator_stub_libs,
 	mapper_stub_libs
@@ -922,7 +936,10 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     c_args: common_cflags + intel_cflags,
     cpp_args: common_cppflags,
     link_args: common_link_args,
-    #pic: true,
+    link_whole: [
+        lib_minigbm_intel,
+ #       libminigbm_gralloc4_utils,
+    ],
     name_prefix : '',
     build_by_default: false,
     install : true,
@@ -941,16 +958,14 @@ executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm',
   [
 	minigbm_gralloc4_allocator_files,
-	aidl_srcs,
+        minigbm_gralloc4_utils_files,
+#	aidl_srcs,
   ],
   link_with : [
-	lib_minigbm,
-	libminigbm_gralloc4_utils,
 	stub_libs,
 	allocator_stub_libs,
-	mapper_stub_libs,
-	# link all together as allocator
-	shared_lib_mapper_minigbm,
+# questionable?
+#	mapper_stub_libs,
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : [
@@ -958,10 +973,14 @@ executable(
 	common_hidl_deps,
 	dependency('libminigbm_gralloc', required : false),
   ],
-  cpp_args: common_cflags,
+  cpp_args: [common_cflags, '-D_LIBCPP_ABI_NAMESPACE=__1' ],
   c_args: common_cflags,
   link_args: common_link_args,
   #pie: true,
+  link_whole: [
+	lib_minigbm,
+#	libminigbm_gralloc4_utils,
+  ],
   install : true,
   build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -975,20 +994,21 @@ executable(
 	aidl_srcs,
   ],
   link_with : [
-	lib_minigbm_msm,
-	libminigbm_gralloc4_utils,
 	stub_libs,
 	allocator_stub_libs,
-	mapper_stub_libs,
+#	mapper_stub_libs,
 	# link all together as allocator
-	shared_lib_mapper_minigbm_msm,
+#	shared_lib_mapper_minigbm_msm,
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
   c_args: common_cflags + msm_cflags,
   cpp_args: common_cppflags,
   link_args: common_link_args,
-  #pie: true,
+  link_whole: [
+        lib_minigbm_msm,
+        libminigbm_gralloc4_utils,
+  ], 
   install : true,
   build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -1000,10 +1020,11 @@ executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm_arcvm',
   minigbm_gralloc4_allocator_files,
   link_with : [
-	lib_minigbm_arcvm,
-	libminigbm_gralloc4_utils,
+#	lib_minigbm_arcvm,
+#	libminigbm_gralloc4_utils,
 	# link all together as allocator
-	shared_lib_mapper_minigbm_arcvm,
+#	shared_lib_mapper_minigbm_arcvm,
+	stub_libs,
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : [
@@ -1014,7 +1035,10 @@ executable(
   c_args: common_cflags + arcvm_cflags,
   cpp_args: common_cppflags,
   link_args: common_link_args,
-  #pie: true,
+  link_whole: [
+        lib_minigbm_arcvm,
+ #       libminigbm_gralloc4_utils,
+  ],
   install : true,
   build_by_default: false,
   install_dir : join_paths(get_option('libexecdir'), 'hw')
@@ -1027,10 +1051,7 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     'android.hardware.graphics.allocator@4.0-service.minigbm_intel',
     minigbm_gralloc4_allocator_files,
     link_with : [
-		lib_minigbm_intel,
-		libminigbm_gralloc4_utils,
-		# link all together as allocator
-		shared_lib_mapper_minigbm_intel,
+	stub_libs,
     ],
     include_directories : [common_includes, inc_extra],
     dependencies : [
@@ -1041,7 +1062,10 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     c_args: common_cflags + intel_cflags,
     cpp_args: common_cppflags,
     link_args: common_link_args,
-    #pie: true,
+  link_whole: [
+        lib_minigbm_intel,
+#       libminigbm_gralloc4_utils,
+  ],
     install : true,
     build_by_default: false,
     install_dir : join_paths(get_option('libexecdir'), 'hw')
