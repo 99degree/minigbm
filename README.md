@@ -24,6 +24,17 @@ The meson is explicitly for Android oot build. Especially for below:
 - gralloc.minigbm_msm.so
 ...and many...
 
+## Mesa integration
+Since Mesa Android Build out-of-tree, Mesa might be built without Android headers so it certainly do
+not support gralloc4/5 and mapper4/5 in the end.
+
+There is a workaround, since minigbm is compiled as service bin, gralloc4/5 library, and *gralloc0*. So
+this introduce a way Mesa linked to u_gralloc and gralloc0 api. Mesa can do memory mapping through gralloc0,
+and the gralloc0 metadata is same to gralloc4/5 mapper4/5 used within the system. so it skips the linkage
+of HIDL/AIDL/binder.
+
+In theory, this setup can get Mesa to go native without any proot or termux etc.
+
 ## Further work
 - There is possible to compile ndk and without vndk but not go into deep. 
 - Test it with AOSP and MSM phone device is prefereable. 
