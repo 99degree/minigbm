@@ -151,26 +151,26 @@ common_cflags = [
 ]
 
 common_cppflags = [
-#  '-D_LIBCPP___CONFIG_SITE',
-#  '-D_LIBCPP_ABI_VERSION=1',
+  '-D_LIBCPP___CONFIG_SITE',
+  '-D_LIBCPP_ABI_VERSION=1',
 #  '-D_LIBCPP_ABI_NAMESPACE __ndk1
-#  '-D_LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS',
-#  '-D_LIBCPP_HAS_NO_STD_MODULES',
-#  '-D_LIBCPP_HAS_NO_TIME_ZONE_DATABASE',
-#  '-D_LIBCPP_PSTL_CPU_BACKEND_THREAD',
-#  '-D_LIBCPP_HARDENING_MODE_DEFAULT=2',
-#  '-D_LIBCPP_ABI_NAMESPACE=__1',
+  '-D_LIBCPP_HAS_NO_VENDOR_AVAILABILITY_ANNOTATIONS',
+  '-D_LIBCPP_HAS_NO_STD_MODULES',
+  '-D_LIBCPP_HAS_NO_TIME_ZONE_DATABASE',
+  '-D_LIBCPP_PSTL_CPU_BACKEND_THREAD',
+  '-D_LIBCPP_HARDENING_MODE_DEFAULT=2',
+  '-D_LIBCPP_ABI_NAMESPACE=__1',
 #  '-D__ANDROID_API__=34',
   '-D__ANDROID__',
 # Since from AOSP 15 the VNDK migrate to system
 # so need to compile as platform context not NDK context.
-  '-stdlib=libc++',
+#  '-stdlib=libc++',
   '-O0', '-g',
   '-fPIC',
   '-fvisibility=default',
 #  '-fno-inline',
   '-fexceptions',
-  '-frtti',
+  '-fno-rtti',
   '-Wno-unused-parameter',
 #  '-static-libc++',
 #  '-static-libstdc++',
@@ -193,6 +193,7 @@ common_link_args = [
 #  '-nostdlib++',
   '-llog',
   '-lc',
+  '-lstdc++',
 #  '-static-libstdc++',
 #  '-stdlib=libc++',  
 #    '-lc++_static',
@@ -201,8 +202,9 @@ common_link_args = [
 #    '-L'+libcxx_search_path',
 #  '-l:libc++_shared.so',
 #  '-Wl,--no-as-needed',
-   '-lc++', '-lc++abi',
-   '-latomic',
+#   '-lc++', '-lc++abi',
+#   '-latomic',
+#  '-lhidlbase',
 ]
 
 generic_cflags = ['-DHAS_DMABUF_SYSTEM_HEAP']
@@ -212,9 +214,10 @@ msm_cflags     = ['-DDRV_MSM', '-DQCOM_DISABLE_COMPRESSED_NV12', '-DHAS_DMABUF_S
 arcvm_cflags   = ['-DVIRTIO_GPU_NEXT']
 
 #common_link_args += []
-#nosym_link_args = []
-nosym_link_args = ['-Wl,--unresolved-symbols=ignore-all']
-#common_link_args = ['-Wl,--unresolved-symbols=ignore-all']
+nosym_link_args = []
+#nosym_link_args += ['-Wl,--unresolved-symbols=ignore-all']
+#common_link_args += ['-Wl,--unresolved-symbols=ignore-in-shared-libs']
+common_link_args += ['-Wl,--unresolved-symbols=ignore-all']
 
 # from mesa android-stub
 base_deps = []
@@ -290,7 +293,7 @@ mapper5_common_source = files(
 mapper5_common_source = files(
 )
 
-gralloc0_sources = files()  # currently empty
+gralloc0_sources = files('cros_gralloc/gralloc0/gralloc0.cc')  # currently empty
 
 # === Dedicated per-target source groups ===
 libgbm_sources                 = files('gbm.c', 'gbm_helpers.c', 'minigbm_helpers.c')
@@ -744,6 +747,8 @@ minigbm_gralloc4_allocator_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4AllocatorService.cc',
 #  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
 #  'property_get_shim.c'
+  'cros_gralloc/gralloc4/CrosGralloc4AllocatorWrap.cc',
+  'cros_gralloc/generated/android/hardware/graphics/allocator/4.0/AllocatorAll.cpp',
 )
 
 minigbm_gralloc4_mapper_files = files(
