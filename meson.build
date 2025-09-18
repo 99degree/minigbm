@@ -148,9 +148,12 @@ common_cflags = [
   '-Wall', '-Wsign-compare', '-Wpointer-arith', '-Wcast-qual', '-Wcast-align',
   '-Wno-unused-parameter',
   '-Wunused-function',
+#  '-DHAS_DMABUF_SYSTEM_HEAP',
 ]
 
 common_cppflags = [
+  '-D__NR_memfd_create',
+#  '-DHAS_DMABUF_SYSTEM_HEAP',
   '-D_LIBCPP___CONFIG_SITE',
   '-D_LIBCPP_ABI_VERSION=1',
 #  '-D_LIBCPP_ABI_NAMESPACE __ndk1
@@ -847,7 +850,8 @@ shared_lib_mapper_minigbm = shared_library(
 #	libminigbm_gralloc,
 	stub_libs,
 	allocator_stub_libs,
-	mapper_stub_libs
+	mapper_stub_libs,
+	gralloc_minigbm,
   ],
   c_args: common_cflags,
   cpp_args: common_cppflags,
@@ -855,7 +859,7 @@ shared_lib_mapper_minigbm = shared_library(
   name_prefix : '',
   build_by_default: false,
   link_whole: [
-        lib_minigbm,
+#        lib_minigbm,
 #        libminigbm_gralloc4_utils,
   ],
   install : true,
@@ -880,10 +884,11 @@ shared_lib_mapper_minigbm_msm = shared_library(
 #	libminigbm_gralloc_msm,
 	stub_libs,
 #	allocator_stub_libs,
-	mapper_stub_libs
+	mapper_stub_libs,
+	gralloc_minigbm_msm,
   ],
   link_whole: [
-        lib_minigbm_msm,
+#        lib_minigbm_msm,
 #       libminigbm_gralloc4_utils,
   ],
   name_prefix : '',
@@ -907,13 +912,14 @@ shared_lib_mapper_minigbm_arcvm = shared_library(
 #	lib_minigbm_arcvm,
 #	libminigbm_gralloc_arcvm,
 	allocator_stub_libs,
-	mapper_stub_libs
+	mapper_stub_libs,
+	gralloc_minigbm_arcvm,
   ],
   c_args: common_cflags + arcvm_cflags,
   cpp_args: common_cppflags,
   link_args: common_link_args,
   link_whole: [
-        lib_minigbm_arcvm,
+#        lib_minigbm_arcvm,
 #        libminigbm_gralloc4_utils,
   ],
   name_prefix : '',
@@ -938,13 +944,14 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
 #	libminigbm_gralloc_intel,
 	stub_libs,
 	allocator_stub_libs,
-	mapper_stub_libs
+	mapper_stub_libs,
+	gralloc_minigbm_intel,
     ],
     c_args: common_cflags + intel_cflags,
     cpp_args: common_cppflags,
     link_args: common_link_args,
     link_whole: [
-        lib_minigbm_intel,
+#        lib_minigbm_intel,
  #       libminigbm_gralloc4_utils,
     ],
     name_prefix : '',
@@ -965,14 +972,16 @@ executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm',
   [
 	minigbm_gralloc4_allocator_files,
-        minigbm_gralloc4_utils_files,
+#        minigbm_gralloc4_utils_files,
 #	aidl_srcs,
   ],
   link_with : [
 	stub_libs,
 	allocator_stub_libs,
+#        lib_minigbm,
 # questionable?
 #	mapper_stub_libs,
+	gralloc_minigbm,
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : [
@@ -980,13 +989,13 @@ executable(
 	common_hidl_deps,
 	dependency('libminigbm_gralloc', required : false),
   ],
-  cpp_args: [common_cflags, '-D_LIBCPP_ABI_NAMESPACE=__1' ],
+  cpp_args: [common_cflags, ],
   c_args: common_cflags,
   link_args: common_link_args,
   #pie: true,
   link_whole: [
-	lib_minigbm,
-#	libminigbm_gralloc4_utils,
+#	lib_minigbm,
+	libminigbm_gralloc4_utils,
   ],
   install : true,
   build_by_default: false,
@@ -998,14 +1007,17 @@ executable(
   'android.hardware.graphics.allocator@4.0-service.minigbm_msm',
   [
 	minigbm_gralloc4_allocator_files,
-	aidl_srcs,
+#	aidl_srcs,
   ],
   link_with : [
 	stub_libs,
 	allocator_stub_libs,
+#	lib_minigbm_msm,
 #	mapper_stub_libs,
 	# link all together as allocator
 #	shared_lib_mapper_minigbm_msm,
+# due to uniqueness of minigbm_driver, so put it in gralloc0
+	gralloc_minigbm_msm,
   ],
   include_directories : [common_includes, inc_extra],
   dependencies : common_deps + common_hidl_deps + [ dependency('libminigbm_gralloc_msm', required : false) ],
@@ -1013,7 +1025,7 @@ executable(
   cpp_args: common_cppflags,
   link_args: common_link_args,
   link_whole: [
-        lib_minigbm_msm,
+#        lib_minigbm_msm,
         libminigbm_gralloc4_utils,
   ], 
   install : true,
@@ -1028,6 +1040,8 @@ executable(
   minigbm_gralloc4_allocator_files,
   link_with : [
 #	lib_minigbm_arcvm,
+	gralloc_minigbm_arcvm,
+        allocator_stub_libs,
 #	libminigbm_gralloc4_utils,
 	# link all together as allocator
 #	shared_lib_mapper_minigbm_arcvm,
@@ -1043,8 +1057,8 @@ executable(
   cpp_args: common_cppflags,
   link_args: common_link_args,
   link_whole: [
-        lib_minigbm_arcvm,
- #       libminigbm_gralloc4_utils,
+#        lib_minigbm_arcvm,
+        libminigbm_gralloc4_utils,
   ],
   install : true,
   build_by_default: false,
@@ -1059,6 +1073,9 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     minigbm_gralloc4_allocator_files,
     link_with : [
 	stub_libs,
+        allocator_stub_libs,
+#        lib_minigbm_intel,
+	gralloc_minigbm_intel,
     ],
     include_directories : [common_includes, inc_extra],
     dependencies : [
@@ -1070,8 +1087,8 @@ if host_machine.cpu_family() in ['x86', 'x86_64']
     cpp_args: common_cppflags,
     link_args: common_link_args,
   link_whole: [
-        lib_minigbm_intel,
-#       libminigbm_gralloc4_utils,
+#        lib_minigbm_intel,
+       libminigbm_gralloc4_utils,
   ],
     install : true,
     build_by_default: false,
@@ -1161,11 +1178,14 @@ executable(
   link_args: [
 	common_link_args,
   ],
-  link_whole: [        lib_minigbm,],
+  link_whole: [ 
+#       lib_minigbm,
+  ],
   link_with : [
         #libminigbm_gralloc4_utils,
         stub_libs,
         #libminigbm_gralloc,
+	gralloc_minigbm,
   ],
   build_by_default: false,
   #pie: true,
@@ -1190,12 +1210,16 @@ executable(
         libdrm_dep,
 #	cc.find_library('c++_shared', required: false),
   ],
-  link_whole: [        lib_minigbm,],
+  link_whole: [
+#        lib_minigbm,
+#	gralloc_minigbm_msm,
+  ],
   link_with : [
 #	lib_minigbm_msm,
 #	libminigbm_gralloc4_utils,
 	stub_libs,
 #	libminigbm_gralloc_msm,
+	gralloc_minigbm_msm,
   ],
   c_args: common_cflags,
   cpp_args: common_cppflags,
