@@ -747,7 +747,7 @@ minigbm_gralloc4_allocator_files = files(
   'cros_gralloc/gralloc4/CrosGralloc4AllocatorService.cc',
 #  'cros_gralloc/gralloc4/CrosGralloc4Utils.cc',
 #  'property_get_shim.c'
-  'cros_gralloc/gralloc4/CrosGralloc4AllocatorWrap.cc',
+#  'cros_gralloc/gralloc4/CrosGralloc4AllocatorWrap.cc',
   'cros_gralloc/generated/android/hardware/graphics/allocator/4.0/AllocatorAll.cpp',
 )
 
