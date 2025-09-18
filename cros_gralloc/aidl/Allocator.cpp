@@ -10,14 +10,16 @@
 #include <aidlcommonsupport/NativeHandle.h>
 #include <android-base/logging.h>
 #include <android/binder_ibinder_platform.h>
-#include <gralloctypes/Gralloc4.h>
 #include <log/log.h>
+
+#include <android/binder_status.h>
+#include <android/binder_auto_utils.h>
 
 #include "cros_gralloc/gralloc4/CrosGralloc4Utils.h"
 
 using aidl::android::hardware::common::NativeHandle;
-using BufferDescriptorInfoV4 =
-        android::hardware::graphics::mapper::V4_0::IMapper::BufferDescriptorInfo;
+using aidl::android::hardware::graphics::common::PixelFormat;
+using aidl::android::hardware::graphics::common::BufferUsage;
 
 static const std::string STANDARD_METADATA_DATASPACE = "android.hardware.graphics.common.Dataspace";
 
@@ -28,19 +30,57 @@ inline ndk::ScopedAStatus ToBinderStatus(AllocationError error) {
     return ndk::ScopedAStatus::fromServiceSpecificError(static_cast<int32_t>(error));
 }
 
+/* move from crosGralloc4Utils so we can have a cleaner aidl version */
+int convertToDrmFormat(PixelFormat format, uint32_t* outDrmFormat) {
+    static_assert(std::is_same<std::underlying_type<PixelFormat>::type, int32_t>::value);
+
+    const uint32_t drmFormat = cros_gralloc_convert_format(static_cast<int32_t>(format));
+    if (drmFormat == DRM_FORMAT_NONE) return -EINVAL;
+
+    *outDrmFormat = drmFormat;
+    return 0;
+}
+
+int convertToBufferUsage(BufferUsage grallocUsage, uint64_t* outBufferUsage) {
+    static_assert(std::is_same<std::underlying_type<BufferUsage>::type, int64_t>::value);
+
+    *outBufferUsage = cros_gralloc_convert_usage(static_cast<uint64_t>(grallocUsage));
+    return 0;
+}
+
+std::string getUsageString(BufferUsage bufferUsage) {
+    static_assert(std::is_same<std::underlying_type<BufferUsage>::type, int64_t>::value);
+
+    const uint64_t usage = static_cast<int64_t>(bufferUsage);
+    return android::hardware::graphics::common::toString(bufferUsage);
+}
+
+std::string getPixelFormatString(PixelFormat format) {
+	return aidl::android::hardware::graphics::common::toString(format);
+}
+
 ndk::ScopedAStatus convertToCrosDescriptor(const BufferDescriptorInfo& info,
                                            struct cros_gralloc_buffer_descriptor& crosDescriptor) {
-    const BufferDescriptorInfoV4 mapperV4Descriptor = {
-        .name{reinterpret_cast<const char*>(info.name.data())},
-        .width = static_cast<uint32_t>(info.width),
-        .height = static_cast<uint32_t>(info.height),
-        .layerCount = static_cast<uint32_t>(info.layerCount),
-        .format = static_cast<::android::hardware::graphics::common::V1_2::PixelFormat>(info.format),
-        .usage = static_cast<uint64_t>(info.usage),
-        .reservedSize = 0,
-    };
-    if (convertToCrosDescriptor(mapperV4Descriptor, &crosDescriptor)) {
-        return ToBinderStatus(AllocationError::UNSUPPORTED);
+    crosDescriptor.name = std::string(info.name.begin(), info.name.end());
+    crosDescriptor.width = info.width;
+    crosDescriptor.height = info.height;
+    crosDescriptor.droid_format = static_cast<int32_t>(info.format);
+    crosDescriptor.droid_usage = static_cast<uint64_t>(info.usage);
+    crosDescriptor.enable_metadata_fd = true;
+    crosDescriptor.client_metadata_size = info.reservedSize;
+    if (info.layerCount > 1) {
+        ALOGE("Failed to convert descriptor. Unsupported layerCount: %d", info.layerCount);
+	return ToBinderStatus(AllocationError::UNSUPPORTED);
+    }
+    if (convertToDrmFormat(info.format, &crosDescriptor.drm_format)) {
+        std::string pixelFormatString = getPixelFormatString(info.format);
+        ALOGE("Failed to convert descriptor. Unsupported format %s", pixelFormatString.c_str());
+	return ToBinderStatus(AllocationError::UNSUPPORTED);
+    }
+    if (convertToBufferUsage(info.usage, &crosDescriptor.use_flags)) {
+        std::string usageString = getUsageString(info.usage);
+        ALOGE("Failed to convert descriptor. Unsupported usage flags %s", usageString.c_str());
+	return ToBinderStatus(AllocationError::UNSUPPORTED);
     }
 
     for (const auto& option : info.additionalOptions) {
@@ -68,6 +108,11 @@ void Allocator::releaseBufferAndHandle(native_handle_t* handle) {
 
 ndk::ScopedAStatus Allocator::allocate(const std::vector<uint8_t>& encodedDescriptor, int32_t count,
                                        allocator::AllocationResult* outResult) {
+
+    return ndk::ScopedAStatus::fromServiceSpecificError(-ENOSYS);
+
+/* purposely remove the use of this method and make it compatible to android 15+ */
+#if 0
     if (!mDriver) {
         ALOGE("Failed to allocate. Driver is uninitialized.\n");
         return ToBinderStatus(AllocationError::NO_RESOURCES);
@@ -87,10 +132,11 @@ ndk::ScopedAStatus Allocator::allocate(const std::vector<uint8_t>& encodedDescri
     }
 
     return allocate(crosDescriptor, count, outResult);
+#endif
 }
 
 ndk::ScopedAStatus Allocator::allocate2(const BufferDescriptorInfo& descriptor, int32_t count,
-                                        allocator::AllocationResult* outResult) {
+                            allocator::AllocationResult* outResult) {
     if (!mDriver) {
         ALOGE("Failed to allocate. Driver is uninitialized.\n");
         return ToBinderStatus(AllocationError::NO_RESOURCES);
