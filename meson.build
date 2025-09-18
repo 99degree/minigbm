@@ -162,6 +162,8 @@ common_cppflags = [
   '-D_LIBCPP_ABI_NAMESPACE=__1',
 #  '-D__ANDROID_API__=34',
   '-D__ANDROID__',
+  '-D__ANDROID_MIN_SDK_VERSION__=34',
+  '-DANDROID_API_LEVEL=34',
 # Since from AOSP 15 the VNDK migrate to system
 # so need to compile as platform context not NDK context.
 #  '-stdlib=libc++',
